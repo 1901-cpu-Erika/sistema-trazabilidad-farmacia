@@ -1,0 +1,81 @@
+.sidebar {
+    background: linear-gradient(180deg, #1a1e2b 0%, #2d3748 100%);
+}
+
+.sidebar .nav-link {
+    padding: 10px 15px;
+    margin: 5px 0;
+    transition: all 0.3s;
+}
+
+.sidebar .nav-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.notification-badge {
+    position: relative;
+    top: -10px;
+    right: 5px;
+    padding: 3px 6px;
+    border-radius: 50%;
+    background: red;
+    color: white;
+    font-size: 10px;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+.sidebar {
+    width: 230px;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background: linear-gradient(180deg, #1a1e2b 0%, #2d3748 100%);
+    padding-top: 20px;
+}
+
+.main-content {
+    margin-left: 230px;
+    padding: 20px;
+}
+
+body {
+    overflow-x: hidden;
+}
+
+/* ================= CORRECCIÓN PARA LOS DROPDOWNS DE LOS FORMULARIOS ================= */
+.dropdown-item, 
+.select2-results__option,
+.multiselect-container li a,
+.dropdown-menu li a,
+.form-select option {
+    color: #333333 !important;
+    background-color: #ffffff !important;
+}
+
+.dropdown-item:hover, 
+.dropdown-item:focus, 
+.dropdown-item.active,
+.select2-results__option--highlighted[aria-selected="true"] {
+    color: #ffffff !important;
+    background-color: #0d6efd !important;
+}

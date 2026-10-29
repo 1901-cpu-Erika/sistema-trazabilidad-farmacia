@@ -1,0 +1,17 @@
+.glass-card {
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+}
+
+.glass-card .form-control {
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+}
+
+.glass-card .form-control:focus {
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.25);
+}
