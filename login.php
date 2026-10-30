@@ -1,21 +1,25 @@
 <?php
-// 1. Configurar sesión ANTES de iniciarla (Clave para Vercel)
+// Configuración idéntica al login para Vercel
 if (session_status() === PHP_SESSION_NONE) {
     session_save_path('/tmp');
-    // Configurar cookies para que Vercel no las bloquee
     session_set_cookie_params([
         'lifetime' => 0,
         'path' => '/',
-        'secure' => true, // Vercel usa HTTPS
+        'secure' => true,
         'httponly' => true,
         'samesite' => 'Lax'
     ]);
     session_start();
 }
 
-require_once 'config/database.php';
+if (!isset($_SESSION['usuario_id'])) {
+    // Redirección absoluta a la raíz
+    header("Location: /login.php");
+    exit();
+}
 
-// 2. Si ya está logueado, redirigir con BARRA INICIAL
+
+require_once 'config/database.php';
 if (isset($_SESSION['usuario_id'])) {
     switch ($_SESSION['tipo_usuario']) {
         case 'admin':
@@ -55,7 +59,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $user = $result->fetch_assoc();
 
         if ($password == $user['password']) {
-            // Regenerar ID solo al hacer login exitoso
             session_regenerate_id(true);
 
             $_SESSION['usuario_id']       = $user['id'];
@@ -64,8 +67,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_SESSION['usuario_email']    = $user['email'];
             $_SESSION['especialidad_id']  = $user['especialidad_id'];
             $_SESSION['especialidad']     = $user['especialidad'] ?? 'Sin especialidad';
-
-            // 3. Redirigir con BARRA INICIAL
             switch ($user['tipo']) {
                 case 'admin':
                     header("Location: /modules/admin/dashboard.php");

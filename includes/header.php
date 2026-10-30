@@ -1,14 +1,26 @@
 <?php
+// Configuración idéntica al login para Vercel
 if (session_status() === PHP_SESSION_NONE) {
     session_save_path('/tmp');
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'secure' => true,
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
     session_start();
 }
 
 if (!isset($_SESSION['usuario_id'])) {
-    // Redirigir a la raíz del proyecto (funciona en Vercel y XAMPP)
+    // Redirección absoluta a la raíz
     header("Location: /login.php");
     exit();
 }
+?>
+<!DOCTYPE html>
+<html lang="es">
+<!-- ... el resto de tu header igual ... -->
 ?>
 <!DOCTYPE html>
 <html lang="es">
