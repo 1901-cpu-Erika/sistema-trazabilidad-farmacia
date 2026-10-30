@@ -14,7 +14,7 @@ if (session_status() === PHP_SESSION_NONE) {
 date_default_timezone_set('America/Managua');
 require_once '../../config/database.php';
 if (!isset($_SESSION['usuario_id']) || $_SESSION['tipo_usuario'] !== 'doctor') {
-    header("Location: /login.php"); // <--- ¡AQUÍ ESTÁ LA MAGIA! SIN LOS ../
+    header("Location: /login.php");
     exit();
 }
 
