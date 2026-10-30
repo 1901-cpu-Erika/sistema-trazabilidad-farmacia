@@ -1,26 +1,34 @@
 <?php
+// 1. Configurar sesión ANTES de iniciarla (Clave para Vercel)
 if (session_status() === PHP_SESSION_NONE) {
-   session_save_path('/tmp');
-session_start();
-
-session_set_cookie_params(['path' => '/', 'secure' => true, 'httponly' => true]);
-session_regenerate_id(true);
+    session_save_path('/tmp');
+    // Configurar cookies para que Vercel no las bloquee
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'secure' => true, // Vercel usa HTTPS
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
+    session_start();
 }
+
 require_once 'config/database.php';
 
+// 2. Si ya está logueado, redirigir con BARRA INICIAL
 if (isset($_SESSION['usuario_id'])) {
     switch ($_SESSION['tipo_usuario']) {
         case 'admin':
-            header("Location: modules/admin/dashboard.php");
+            header("Location: /modules/admin/dashboard.php");
             break;
         case 'jefe_farmacia':
-            header("Location: modules/jefe_farmacia/dashboard.php");
+            header("Location: /modules/jefe_farmacia/dashboard.php");
             break;
         case 'doctor':
-            header("Location: modules/doctor/dashboard.php");
+            header("Location: /modules/doctor/dashboard.php");
             break;
         case 'farmacia':
-            header("Location: modules/farmacia/dashboard.php");
+            header("Location: /modules/farmacia/dashboard.php");
             break;
         default:
             session_destroy();
@@ -47,6 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $user = $result->fetch_assoc();
 
         if ($password == $user['password']) {
+            // Regenerar ID solo al hacer login exitoso
             session_regenerate_id(true);
 
             $_SESSION['usuario_id']       = $user['id'];
@@ -56,18 +65,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_SESSION['especialidad_id']  = $user['especialidad_id'];
             $_SESSION['especialidad']     = $user['especialidad'] ?? 'Sin especialidad';
 
+            // 3. Redirigir con BARRA INICIAL
             switch ($user['tipo']) {
                 case 'admin':
-                    header("Location: modules/admin/dashboard.php");
+                    header("Location: /modules/admin/dashboard.php");
                     break;
                 case 'jefe_farmacia':
-                    header("Location: modules/jefe_farmacia/dashboard.php");
+                    header("Location: /modules/jefe_farmacia/dashboard.php");
                     break;
                 case 'doctor':
-                    header("Location: modules/doctor/dashboard.php");
+                    header("Location: /modules/doctor/dashboard.php");
                     break;
                 case 'farmacia':
-                    header("Location: modules/farmacia/dashboard.php");
+                    header("Location: /modules/farmacia/dashboard.php");
                     break;
                 default:
                     $error = "Rol no reconocido. Contacta al administrador.";

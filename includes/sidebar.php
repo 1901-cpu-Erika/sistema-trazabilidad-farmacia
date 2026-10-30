@@ -1,13 +1,25 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) {
+    if (file_exists('/tmp')) { session_save_path('/tmp'); } // Fix para Vercel
     session_start();
 }
 
 $tipo_usuario   = $_SESSION['tipo_usuario'] ?? 'doctor';
 $nombre_usuario = $_SESSION['usuario_nombre'] ?? 'Usuario';
 
+// ==========================================
+// ARREGLO DE URL PARA VERCEL Y XAMPP
+// ==========================================
 $protocolo = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
-$base_url  = $protocolo . "://" . $_SERVER['HTTP_HOST'] . "/sistema-trazabilidad-farmacia/";
+$host = $_SERVER['HTTP_HOST'];
+
+// Si la URL contiene 'vercel.app', estamos en producción. Si no, en local.
+if (strpos($host, 'vercel.app') !== false) {
+    $base_url = $protocolo . "://" . $host . "/";
+} else {
+    $base_url = $protocolo . "://" . $host . "/sistema-trazabilidad-farmacia/";
+}
+// ==========================================
 
 $archivo_actual = basename($_SERVER['PHP_SELF']);
 
@@ -159,7 +171,6 @@ $nombre_rol = match($tipo_usuario) {
         letter-spacing: 0.5px;
         margin-top: 4px;
     }
-   
 
     .sidebar-section-title { color: rgba(255,255,255,0.35); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; padding: 16px 24px 8px 24px; }
     .sidebar .nav { list-style: none; padding: 0 12px; margin: 0; flex-direction: column; display: flex; }
