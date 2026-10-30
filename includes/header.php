@@ -1,25 +1,14 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) {
     session_save_path('/tmp');
-    session_set_cookie_params([
-        'lifetime' => 0,
-        'path' => '/',
-        'secure' => true,
-        'httponly' => true,
-        'samesite' => 'Lax'
-    ]);
     session_start();
 }
 
 if (!isset($_SESSION['usuario_id'])) {
-    // Redirección absoluta desde la raíz, SIN el nombre de la carpeta
-    header("Location: /login.php"); 
+    // Redirigir a la raíz del proyecto (funciona en Vercel y XAMPP)
+    header("Location: /login.php");
     exit();
 }
-?>
-<!DOCTYPE html>
-<html lang="es">
-<!-- ... el resto de tu header igual ... -->
 ?>
 <!DOCTYPE html>
 <html lang="es">

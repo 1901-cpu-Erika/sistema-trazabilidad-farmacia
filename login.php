@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $user = $result->fetch_assoc();
 
         if ($password == $user['password']) {
-            session_regenerate_id(true);
+            //session_regenerate_id(true);
 
             $_SESSION['usuario_id']       = $user['id'];
             $_SESSION['usuario_nombre']   = $user['nombre'];

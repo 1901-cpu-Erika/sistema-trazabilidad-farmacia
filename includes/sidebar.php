@@ -230,7 +230,7 @@ $nombre_rol = match($tipo_usuario) {
 
         <li class="nav-item">
             <a class="nav-link <?php echo $archivo_actual == 'dashboard.php' ? 'active' : ''; ?>"
-               href="<?php echo $base_url; ?>modules/<?php echo $tipo_usuario; ?>/dashboard.php">
+               href="<?php echo $base_url; ?>/modules/<?php echo $tipo_usuario; ?>/dashboard.php">
                 <i class="fas fa-tachometer-alt"></i> Dashboard
             </a>
         </li>
@@ -239,14 +239,14 @@ $nombre_rol = match($tipo_usuario) {
             <li class="sidebar-section-title">Personal</li>
             <li class="nav-item">
                 <a class="nav-link <?php echo in_array($archivo_actual, ['gestion_doctores.php','usuarios.php']) ? 'active' : ''; ?>"
-                   href="<?php echo $base_url; ?>modules/admin/usuarios.php">
+                   href="<?php echo $base_url; ?>/modules/admin/usuarios.php">
                     <i class="fas fa-user-md"></i> Gestión de Doctores
                 </a>
             </li>
             <li class="sidebar-section-title">Análisis</li>
             <li class="nav-item">
                 <a class="nav-link <?php echo $archivo_actual == 'reportes_personal.php' ? 'active' : ''; ?>"
-                   href="<?php echo $base_url; ?>modules/admin/reportes_personal.php">
+                   href="<?php echo $base_url; ?>/modules/admin/reportes_personal.php">
                     <i class="fas fa-chart-bar"></i> Reportes del Personal
                 </a>
             </li>
@@ -264,27 +264,27 @@ $nombre_rol = match($tipo_usuario) {
             </li>
             <li class="nav-item">
                 <a class="nav-link <?php echo in_array($archivo_actual, ['medicamentos.php','gestion_medicamentos.php']) ? 'active' : ''; ?>"
-                   href="<?php echo $base_url; ?>modules/jefe_farmacia/medicamentos.php">
+                   href="<?php echo $base_url; ?>/modules/jefe_farmacia/medicamentos.php">
                     <i class="fas fa-capsules"></i> Medicamentos
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link <?php echo $archivo_actual == 'categorias.php' ? 'active' : ''; ?>"
-                   href="<?php echo $base_url; ?>modules/jefe_farmacia/categorias.php">
+                   href="<?php echo $base_url; ?>/modules/jefe_farmacia/categorias.php">
                     <i class="fas fa-tags"></i> Categorías
                 </a>
             </li>
             <li class="sidebar-section-title">Solicitudes</li>
             <li class="nav-item">
                 <a class="nav-link <?php echo $archivo_actual == 'solicitud_reposicion.php' ? 'active' : ''; ?>"
-                   href="<?php echo $base_url; ?>modules/jefe_farmacia/solicitud_reposicion.php">
+                   href="<?php echo $base_url; ?>/modules/jefe_farmacia/solicitud_reposicion.php">
                     <i class="fas fa-file-invoice"></i> Solicitud de Reposición
                 </a>
             </li>
             <li class="sidebar-section-title">Análisis</li>
             <li class="nav-item">
                 <a class="nav-link <?php echo $archivo_actual == 'reportes.php' ? 'active' : ''; ?>"
-                   href="<?php echo $base_url; ?>modules/jefe_farmacia/reportes.php">
+                   href="<?php echo $base_url; ?>/modules/jefe_farmacia/reportes.php">
                     <i class="fas fa-chart-bar"></i> Reportes
                 </a>
             </li>
@@ -293,7 +293,7 @@ $nombre_rol = match($tipo_usuario) {
             <li class="sidebar-section-title">Recetas</li>
             <li class="nav-item">
                 <a class="nav-link <?php echo $archivo_actual == 'crear_receta.php' ? 'active' : ''; ?>"
-                   href="<?php echo $base_url; ?>modules/doctor/crear_receta.php">
+                   href="<?php echo $base_url; ?>/modules/doctor/crear_receta.php">
                     <i class="fas fa-file-prescription"></i> Crear Receta
                 </a>
             </li>
@@ -308,20 +308,20 @@ $nombre_rol = match($tipo_usuario) {
             <li class="sidebar-section-title">Atención</li>
             <li class="nav-item">
                 <a class="nav-link <?php echo $archivo_actual == 'buscar_paciente.php' ? 'active' : ''; ?>"
-                   href="<?php echo $base_url; ?>modules/farmacia/buscar_paciente.php">
+                   href="<?php echo $base_url; ?>/modules/farmacia/buscar_paciente.php">
                     <i class="fas fa-search"></i> Buscar Paciente
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link <?php echo $archivo_actual == 'recetas_recibidas.php' ? 'active' : ''; ?>"
-                   href="<?php echo $base_url; ?>modules/farmacia/recetas_recibidas.php">
+                   href="<?php echo $base_url; ?>/modules/farmacia/recetas_recibidas.php">
                     <i class="fas fa-prescription"></i> Recetas Recibidas
                 </a>
             </li>
             <li class="sidebar-section-title">Entregas</li>
             <li class="nav-item">
                 <a class="nav-link <?php echo $archivo_actual == 'entrega_medicamentos.php' ? 'active' : ''; ?>"
-                   href="<?php echo $base_url; ?>modules/farmacia/entrega_medicamentos.php">
+                   href="<?php echo $base_url; ?>/modules/farmacia/entrega_medicamentos.php">
                     <i class="fas fa-hand-holding-medical"></i> Entregas
                 </a>
             </li>
