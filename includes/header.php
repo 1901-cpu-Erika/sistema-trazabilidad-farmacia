@@ -1,5 +1,4 @@
 <?php
-// Configuración idéntica al login para Vercel
 if (session_status() === PHP_SESSION_NONE) {
     session_save_path('/tmp');
     session_set_cookie_params([
@@ -13,8 +12,8 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 if (!isset($_SESSION['usuario_id'])) {
-    // Redirección absoluta a la raíz
-    header("Location: /login.php");
+    // Redirección absoluta desde la raíz, SIN el nombre de la carpeta
+    header("Location: /login.php"); 
     exit();
 }
 ?>
