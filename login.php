@@ -1,7 +1,10 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) {
-    session_save_path('/tmp');
-    session_start();
+   session_save_path('/tmp');
+session_start();
+
+session_set_cookie_params(['path' => '/', 'secure' => true, 'httponly' => true]);
+session_regenerate_id(true);
 }
 require_once 'config/database.php';
 
