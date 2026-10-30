@@ -1,6 +1,8 @@
 <?php
-session_save_path('/tmp'); 
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_save_path('/tmp');
+    session_start();
+}
 require_once 'config/database.php';
 
 if (isset($_SESSION['usuario_id'])) {
