@@ -1,9 +1,16 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) {
     session_save_path('/tmp');
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'secure' => true,
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
     session_start();
 }
-// ... resto de tu código del header
+
 require_once '../../config/database.php';
 $titulo_pagina = "Panel de Control - Farmacia";
 require_once '../../includes/header.php';

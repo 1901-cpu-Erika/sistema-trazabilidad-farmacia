@@ -1,5 +1,5 @@
 <?php
-session_save_path('/tmp'); // Esto es clave para Vercel
+session_save_path('/tmp'); 
     session_start();
 require_once '../../config/database.php';
 

@@ -1,23 +1,9 @@
 <?php
-// Configuración idéntica al login para Vercel
 if (session_status() === PHP_SESSION_NONE) {
     session_save_path('/tmp');
-    session_set_cookie_params([
-        'lifetime' => 0,
-        'path' => '/',
-        'secure' => true,
-        'httponly' => true,
-        'samesite' => 'Lax'
-    ]);
+    session_set_cookie_params(['lifetime' => 0, 'path' => '/', 'secure' => true, 'httponly' => true, 'samesite' => 'Lax']);
     session_start();
 }
-
-if (!isset($_SESSION['usuario_id'])) {
-    // Redirección absoluta a la raíz
-    header("Location: /login.php");
-    exit();
-}
-
 
 require_once 'config/database.php';
 if (isset($_SESSION['usuario_id'])) {

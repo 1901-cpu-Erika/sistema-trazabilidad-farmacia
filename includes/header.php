@@ -1,11 +1,11 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) {
     session_save_path('/tmp');
+    session_set_cookie_params(['lifetime' => 0, 'path' => '/', 'secure' => true, 'httponly' => true, 'samesite' => 'Lax']);
     session_start();
 }
 
 if (!isset($_SESSION['usuario_id'])) {
-    // Redirigir a la raíz del proyecto (funciona en Vercel y XAMPP)
     header("Location: /login.php");
     exit();
 }
