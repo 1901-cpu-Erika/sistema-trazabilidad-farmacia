@@ -1,8 +1,9 @@
 <?php
-// Vercel tiene una variable de entorno llamada 'VERCEL' que vale '1' en producción
-$en_vercel = getenv('VERCEL') === '1';
+// Detectamos si estamos en tu PC (XAMPP)
+$host_actual = $_SERVER['HTTP_HOST'] ?? '';
+$es_local = (strpos($host_actual, 'localhost') !== false || strpos($host_actual, '127.0.0.1') !== false);
 
-if (!$en_vercel) {
+if ($es_local) {
     // ==========================================
     // CONEXIÓN LOCAL (XAMPP)
     // ==========================================
@@ -26,11 +27,16 @@ if (!$en_vercel) {
     $host     = "mysql-trazabilidad-sistematrazabilidad.e.aivencloud.com";
     $port     = 16692;
     $user     = "avnadmin";
-    $password = "AVNS_fH1PyC3qj6S7l-n-9De"; // Tu contraseña de Aiven
+    $password = "AVNS_fH1PyC3qj6S7l-n-9De"; // Tu contraseña
     $database = "defaultdb";
     
     // Ruta al certificado SSL
     $ssl_ca = __DIR__ . '/../ca.pem';
+
+    // Verificamos que el certificado exista antes de usarlo
+    if (!file_exists($ssl_ca)) {
+        die("Error crítico: No se encuentra el archivo ca.pem en la ruta " . $ssl_ca);
+    }
 
     // Inicializamos mysqli y configuramos el SSL
     $conn = mysqli_init();
