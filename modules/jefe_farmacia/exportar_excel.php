@@ -1,5 +1,7 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) session_start();
+if (session_status() === PHP_SESSION_NONE) session_save_path('/tmp'); // Esto es clave para Vercel
+   session_save_path('/tmp'); // Clave para Vercel
+    session_start();
 date_default_timezone_set('America/Managua');
 require_once '../../config/database.php';
 

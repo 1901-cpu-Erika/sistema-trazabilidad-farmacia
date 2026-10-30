@@ -3,7 +3,9 @@ require_once '../../config/database.php';
 $titulo_pagina = "Panel de Control - Farmacia";
 require_once '../../includes/header.php';
 require_once '../../includes/sidebar.php';
-
+session_save_path('/tmp'); // Esto es clave para Vercel
+   session_save_path('/tmp'); // Clave para Vercel
+    session_start();
 $stats = [];
 
 // 1. Recetas Pendientes

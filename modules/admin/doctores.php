@@ -1,5 +1,6 @@
 <?php
-session_start();
+session_save_path('/tmp'); // Esto es clave para Vercel
+    session_start();
 require_once '../../config/database.php';
 
 if (!isset($_SESSION['usuario_id']) || $_SESSION['tipo_usuario'] !== 'admin') {

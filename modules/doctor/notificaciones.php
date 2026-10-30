@@ -1,4 +1,8 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_save_path('/tmp'); // Clave para Vercel
+    session_start();
+}
 require_once '../../config/database.php';
 $titulo_pagina = "Notificaciones";
 require_once '../../includes/header.php';
@@ -7,7 +11,8 @@ require_once '../../includes/sidebar.php';
 // Verificar sesión
 if (!isset($_SESSION['usuario_id']) || $_SESSION['tipo_usuario'] != 'doctor') {
     header("Location: ../../login.php");
-    exit();
+
+    
 }
 
 $doctor_id = $_SESSION['usuario_id'];

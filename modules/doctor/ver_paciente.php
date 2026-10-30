@@ -1,4 +1,8 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_save_path('/tmp'); // Clave para Vercel
+    session_start();
+}
 require_once '../../config/database.php';
 $titulo_pagina = "Detalle del Paciente";
 require_once '../../includes/header.php';

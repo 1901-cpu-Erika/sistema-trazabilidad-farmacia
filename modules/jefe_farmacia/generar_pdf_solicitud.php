@@ -1,5 +1,6 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) session_start();
+if (session_status() === PHP_SESSION_NONE) session_save_path('/tmp'); // Clave para Vercel
+    session_start();
 require_once '../../config/database.php';
 
 if (!isset($_SESSION['usuario_id']) || $_SESSION['tipo_usuario'] != 'jefe_farmacia') {
@@ -150,7 +151,7 @@ $html .= '
 </body>
 </html>';
 
-$options = new Options();
+/*$options = new Options();
 $options->set('isHtml5ParserEnabled', true);
 $options->set('isRemoteEnabled', true);
 $options->set('defaultFont', 'Arial');
@@ -160,4 +161,4 @@ $dompdf->loadHtml($html);
 $dompdf->setPaper('A4', 'portrait');
 $dompdf->render();
 $dompdf->stream('Formato6_Solicitud_' . date('Ymd_His') . '.pdf', array('Attachment' => false));
-?>
+?>*/

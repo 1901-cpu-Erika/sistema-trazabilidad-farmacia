@@ -1,7 +1,12 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_save_path('/tmp'); // Clave para Vercel
+    session_start();
+}
 require_once '../../config/database.php';
 
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+
     exit;
 }
 

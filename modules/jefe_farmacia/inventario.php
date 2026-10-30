@@ -1,5 +1,6 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) session_start();
+if (session_status() === PHP_SESSION_NONE) session_save_path('/tmp'); // Clave para Vercel
+    session_start();
 require_once __DIR__ . '/../../config/database.php';
 if (!isset($conn) || $conn === null) {
     die('Error: No se pudo establecer la conexión a la base de datos. Verifica el archivo config/database.php');

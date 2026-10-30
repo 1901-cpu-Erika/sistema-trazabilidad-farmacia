@@ -1,4 +1,8 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_save_path('/tmp'); // Clave para Vercel
+    session_start();
+}
 if (session_status() === PHP_SESSION_NONE) session_start();
 date_default_timezone_set('America/Managua');
 require_once '../../config/database.php';
@@ -222,7 +226,7 @@ $html .= '</table>
 </body>
 </html>';
 
-$options = new Options();
+/*$options = new Options();
 $options->set('isHtml5ParserEnabled', true);
 $options->set('isRemoteEnabled', true);
 $options->set('defaultFont', 'Arial');
@@ -233,4 +237,4 @@ $dompdf->setPaper('A4', 'portrait');
 $dompdf->render();
 
 $dompdf->stream('Reporte_Farmacia_' . date('Ymd_His') . '.pdf', array('Attachment' => false));
-?>
+?>*/
