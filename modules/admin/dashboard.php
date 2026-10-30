@@ -7,10 +7,10 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require_once '../../config/database.php';
 
-if (!isset($_SESSION['usuario_id']) || $_SESSION['tipo_usuario'] !== 'admin') {
+/*if (!isset($_SESSION['usuario_id']) || $_SESSION['tipo_usuario'] !== 'admin') {
     header("Location: /login.php");
     exit();
-}
+}*/
 
 $titulo_pagina = "Panel de Administración";
 require_once '../../includes/header.php';

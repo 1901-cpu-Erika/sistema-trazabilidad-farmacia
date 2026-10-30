@@ -6,7 +6,7 @@ require_once '../../config/database.php';
 
 
 if ($_SESSION['tipo_usuario'] != 'jefe_farmacia') {
-    header("Location: ../../login.php");
+    header("Location: /login.php");
     exit();
 }
 $titulo_pagina = "Bodega - Sistema de Inventario";

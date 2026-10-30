@@ -4,7 +4,7 @@ date_default_timezone_set('America/Managua');
 require_once '../../config/database.php';
 
 if (!isset($_SESSION['usuario_id']) || $_SESSION['tipo_usuario'] != 'farmacia') {
-    header("Location: ../../login.php");
+    header("Location: /login.php");
     exit();
 }
 

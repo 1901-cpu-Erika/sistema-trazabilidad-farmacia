@@ -4,7 +4,7 @@ if (session_status() === PHP_SESSION_NONE) session_save_path('/tmp'); // Clave p
 require_once '../../config/database.php';
 
 if (!isset($_SESSION['usuario_id']) || $_SESSION['tipo_usuario'] != 'jefe_farmacia') {
-    header("Location: ../../login.php");
+    header("Location: /login.php");
     exit();
 }
 $limite_stock = isset($_GET['limite']) ? intval($_GET['limite']) : 20;

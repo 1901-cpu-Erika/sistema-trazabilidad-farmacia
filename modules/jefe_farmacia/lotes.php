@@ -8,7 +8,7 @@ if (!isset($conn) || $conn === null) {
 }
 
 if ($_SESSION['tipo_usuario'] != 'jefe_farmacia') {
-    header("Location: ../../login.php");
+    header("Location: /login.php");
     exit();
 }
 

@@ -11,7 +11,7 @@ date_default_timezone_set('America/Managua');
 $fecha_actual = date('d/m/Y h:i:s A');
 
 if (!isset($_SESSION['usuario_id']) || $_SESSION['tipo_usuario'] != 'doctor') {
-    header("Location: ../../login.php");
+    header("Location: /login.php");
     exit();
 }
 
