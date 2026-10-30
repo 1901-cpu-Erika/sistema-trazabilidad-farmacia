@@ -1,4 +1,5 @@
 <?php
+// Configuración idéntica al login para Vercel
 if (session_status() === PHP_SESSION_NONE) {
     session_save_path('/tmp');
     session_set_cookie_params(['lifetime' => 0, 'path' => '/', 'secure' => true, 'httponly' => true, 'samesite' => 'Lax']);
@@ -7,10 +8,11 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require_once '../../config/database.php';
 
-/*if (!isset($_SESSION['usuario_id']) || $_SESSION['tipo_usuario'] !== 'admin') {
-    header("Location: /login.php");
+if (!isset($_SESSION['usuario_id']) || $_SESSION['tipo_usuario'] !== 'admin') {
+    header("Location: /login.php"); // Asegúrate de que tenga la barra
     exit();
-}*/
+}
+
 
 $titulo_pagina = "Panel de Administración";
 require_once '../../includes/header.php';

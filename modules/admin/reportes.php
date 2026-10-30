@@ -1,14 +1,19 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) session_save_path('/tmp'); // Esto es clave para Vercel
+// 1. Configuración estricta de sesión para Vercel
+if (session_status() === PHP_SESSION_NONE) {
+    session_save_path('/tmp');
+    session_set_cookie_params(['lifetime' => 0, 'path' => '/', 'secure' => true, 'httponly' => true, 'samesite' => 'Lax']);
     session_start();
+}
+
 date_default_timezone_set('America/Managua');
 require_once '../../config/database.php';
 
+// 2. Validación con redirección absoluta (con barra /)
 if (!isset($_SESSION['usuario_id']) || $_SESSION['tipo_usuario'] !== 'admin') {
     header("Location: /login.php");
     exit();
 }
-
 $titulo_pagina = "Reportes y Estadísticas";
 require_once '../../includes/header.php';
 require_once '../../includes/sidebar.php';

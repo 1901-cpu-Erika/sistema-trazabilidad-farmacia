@@ -1,10 +1,19 @@
 <?php
+// 1. Forzar la sesión para Vercel (Fuera del IF)
+session_save_path('/tmp');
+session_set_cookie_params(['lifetime' => 0, 'path' => '/', 'secure' => true, 'httponly' => true, 'samesite' => 'Lax']);
 if (session_status() === PHP_SESSION_NONE) {
-   session_save_path('/tmp'); // Esto es clave para Vercel
     session_start();
 }
 
 date_default_timezone_set('America/Managua');
+require_once '../../config/database.php';
+
+// 2. Validación de admin (con barra /)
+if (!isset($_SESSION['usuario_id']) || $_SESSION['tipo_usuario'] !== 'admin') {
+    header("Location: /login.php");
+    exit();
+}
 require_once '../../config/database.php';
 
 $titulo_pagina = "Reportes del Personal";

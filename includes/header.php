@@ -1,14 +1,19 @@
 <?php
+// Forzar la ruta de sesión ANTES de iniciarla (Clave para Vercel)
+session_save_path('/tmp');
+session_set_cookie_params([
+    'lifetime' => 0,
+    'path' => '/',
+    'secure' => true,
+    'httponly' => true,
+    'samesite' => 'Lax'
+]);
 if (session_status() === PHP_SESSION_NONE) {
-    session_save_path('/tmp');
-    session_set_cookie_params([
-        'lifetime' => 0, 'path' => '/', 'secure' => true, 'httponly' => true, 'samesite' => 'Lax'
-    ]);
     session_start();
 }
 
 if (!isset($_SESSION['usuario_id'])) {
-    header("Location: /login.php");
+    header("Location: /login.php"); // Asegúrate de que tenga la barra /
     exit();
 }
 ?>

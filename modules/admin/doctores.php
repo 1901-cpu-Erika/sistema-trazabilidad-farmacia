@@ -1,12 +1,19 @@
 <?php
-session_save_path('/tmp'); 
+// 1. Configuración de sesión para Vercel
+if (session_status() === PHP_SESSION_NONE) {
+    session_save_path('/tmp');
+    session_set_cookie_params(['lifetime' => 0, 'path' => '/', 'secure' => true, 'httponly' => true, 'samesite' => 'Lax']);
     session_start();
+}
+
 require_once '../../config/database.php';
 
+// 2. Redirección absoluta con la barra / (sin los ../../)
 if (!isset($_SESSION['usuario_id']) || $_SESSION['tipo_usuario'] !== 'admin') {
-    header('Location: ../../login.php');
+    header('Location: /login.php'); 
     exit();
 }
+
 $mensaje = '';
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
