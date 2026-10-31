@@ -327,14 +327,14 @@ $nombre_rol = match($tipo_usuario) {
             </li>
             <li class="nav-item">
                 <a class="nav-link <?php echo $archivo_actual == 'historial_entrega.php' ? 'active' : ''; ?>"
-                   href="<?php echo $base_url; ?>modules/farmacia/historial_entrega.php">
+                   href="<?php echo $base_url; ?>/modules/farmacia/historial_entrega.php">
                     <i class="fas fa-history"></i> Historial de Entregas
                 </a>
             </li>
             <li class="sidebar-section-title">Análisis</li>
             <li class="nav-item">
                 <a class="nav-link <?php echo $archivo_actual == 'reportes.php' ? 'active' : ''; ?>"
-                   href="<?php echo $base_url; ?>modules/farmacia/reportes.php">
+                   href="<?php echo $base_url; ?>/modules/farmacia/reportes.php">
                     <i class="fas fa-chart-bar"></i> Reportes
                 </a>
             </li>
