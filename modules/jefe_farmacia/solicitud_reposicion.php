@@ -1,12 +1,24 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) session_save_path('/tmp'); // Clave para Vercel
+// Configuración estricta de sesión para Vercel
+if (session_status() === PHP_SESSION_NONE) {
+    session_save_path('/tmp'); // Clave para Vercel
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'secure' => true,
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
     session_start();
+}
+
 require_once '../../config/database.php';
 
 if (!isset($_SESSION['usuario_id']) || $_SESSION['tipo_usuario'] != 'jefe_farmacia') {
     header("Location: /login.php");
     exit();
 }
+
 $limite_stock = isset($_GET['limite']) ? intval($_GET['limite']) : 20;
 
 $sql = "SELECT 
@@ -39,34 +51,85 @@ require_once '../../includes/sidebar.php';
 ?>
 
 <style>
-    .sol-hero { background: linear-gradient(135deg, #065f46 0%, #059669 55%, #10b981 100%); border-radius: 22px; padding: 30px 34px; color: #fff; position: relative; overflow: hidden; box-shadow: 0 15px 40px rgba(5,150,105,0.28); margin-bottom: 26px; }
-    .sol-hero::before { content: '\f56e'; font-family: "Font Awesome 6 Free"; font-weight: 900; position: absolute; right: 20px; bottom: -30px; font-size: 180px; opacity: 0.1; }
+    /* ELIMINAR ESPACIO EN BLANCO SUPERIOR */
+    .main-content { padding-top: 0 !important; }
+    .container-fluid.px-4 { margin-top: -15px; }
+
+    /* PALETA AZUL DEL LOGIN */
+    :root {
+        --sol-primary: #2d6a9f;
+        --sol-dark: #1a3a5c;
+        --sol-light: #e0f2fe;
+    }
+
+    .sol-hero { 
+        background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 55%, #4fa3d1 100%); 
+        border-radius: 22px; padding: 30px 34px; color: #fff; position: relative; 
+        overflow: hidden; box-shadow: 0 15px 40px rgba(45,106,159,0.28); margin-bottom: 26px; 
+    }
+    .sol-hero::before { 
+        content: '\f56e'; font-family: "Font Awesome 6 Free"; font-weight: 900; 
+        position: absolute; right: 20px; bottom: -30px; font-size: 180px; opacity: 0.1; 
+    }
     .sol-hero h3 { font-size: 1.6rem; font-weight: 700; margin-bottom: 4px; }
     .sol-hero p  { margin: 0; opacity: 0.9; }
-    .sol-card { background: #fff; border-radius: 18px; border: 1px solid #e5e7eb; box-shadow: 0 6px 22px rgba(15,23,42,0.05); overflow: hidden; margin-bottom: 24px; }
-    .sol-card-header { padding: 18px 22px; background: linear-gradient(180deg,#fafbfc,#f8fafc); border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
-    .sol-card-header h6 { margin: 0; font-weight: 700; color: #065f46; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; }
-    .sol-card-header h6 i { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: #d1fae5; color: #065f46; border-radius: 8px; font-size: 0.85rem; }
+    
+    .sol-card { 
+        background: #fff; border-radius: 18px; border: 1px solid #e5e7eb; 
+        box-shadow: 0 6px 22px rgba(15,23,42,0.05); overflow: hidden; margin-bottom: 24px; 
+    }
+    .sol-card-header { 
+        padding: 18px 22px; background: linear-gradient(180deg,#fafbfc,#f8fafc); 
+        border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; 
+        justify-content: space-between; flex-wrap: wrap; gap: 10px; 
+    }
+    .sol-card-header h6 { 
+        margin: 0; font-weight: 700; color: #1a3a5c; font-size: 0.95rem; 
+        display: flex; align-items: center; gap: 8px; 
+    }
+    .sol-card-header h6 i { 
+        width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; 
+        background: #e0f2fe; color: #1a3a5c; border-radius: 8px; font-size: 0.85rem; 
+    }
+    
     .sol-table { margin: 0; font-size: 0.87rem; }
-    .sol-table thead th { background: #f8fafc; font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: #64748b; padding: 12px 16px; border-bottom: 1px solid #e2e8f0; }
-    .sol-table tbody td { padding: 12px 16px; vertical-align: middle; border-bottom: 1px solid #f1f5f9; }
-    .sol-table tbody tr:hover { background: linear-gradient(90deg, rgba(5,150,105,0.04), transparent); }
+    .sol-table thead th { 
+        background: #f8fafc; font-size: 0.72rem; text-transform: uppercase; font-weight: 700; 
+        color: #64748b; padding: 12px 16px; border-bottom: 1px solid #e2e8f0; 
+    }
+    .sol-table tbody td { 
+        padding: 12px 16px; vertical-align: middle; border-bottom: 1px solid #f1f5f9; 
+    }
+    .sol-table tbody tr:hover { background: linear-gradient(90deg, rgba(45,106,159,0.04), transparent); }
+    
     .badge-critico { background: #fee2e2; color: #991b1b; padding: 5px 12px; border-radius: 20px; font-weight: 700; font-size: 0.75rem; }
     .badge-bajo { background: #fef3c7; color: #92400e; padding: 5px 12px; border-radius: 20px; font-weight: 700; font-size: 0.75rem; }
+    
     .progress-stock { height: 6px; border-radius: 10px; background: #e2e8f0; margin-top: 5px; }
     .progress-stock .progress-bar { border-radius: 10px; }
     
-    .input-solicitado { width: 100px; margin: 0 auto; text-align: center; font-weight: 700; color: #065f46; background-color: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 6px; font-size: 1rem; }
-    .input-solicitado:focus { background-color: #fff; border-color: #059669; box-shadow: 0 0 0 3px rgba(5,150,105,0.15); outline: none; }
+    .input-solicitado { 
+        width: 100px; margin: 0 auto; text-align: center; font-weight: 700; 
+        color: #1a3a5c; background-color: #e0f2fe; border: 1px solid #bae6fd; 
+        border-radius: 8px; padding: 6px; font-size: 1rem; 
+    }
+    .input-solicitado:focus { 
+        background-color: #fff; border-color: #2d6a9f; 
+        box-shadow: 0 0 0 3px rgba(45,106,159,0.15); outline: none; 
+    }
     .input-solicitado::placeholder { color: #94a3b8; font-weight: 400; }
 
-    .btn-accion { border-radius: 12px; padding: 12px 22px; font-weight: 600; border: none; transition: all 0.25s; display: inline-flex; align-items: center; gap: 8px; }
+    .btn-accion { 
+        border-radius: 12px; padding: 12px 22px; font-weight: 600; border: none; 
+        transition: all 0.25s; display: inline-flex; align-items: center; gap: 8px; 
+    }
     .btn-pdf { background: linear-gradient(135deg, #dc2626, #ef4444); color: #fff; }
     .btn-pdf:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(220,38,38,0.35); color: #fff; }
-    .btn-mail { background: linear-gradient(135deg, #1e40af, #3b82f6); color: #fff; }
-    .btn-mail:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(30,64,175,0.35); color: #fff; }
+    .btn-mail { background: linear-gradient(135deg, #1a3a5c, #2d6a9f); color: #fff; }
+    .btn-mail:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(45,106,159,0.35); color: #fff; }
     .btn-wa { background: linear-gradient(135deg, #047857, #10b981); color: #fff; }
     .btn-wa:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(4,120,87,0.35); color: #fff; }
+    
     .fade-in { animation: fadeUp 0.5s ease forwards; }
     @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 </style>
@@ -101,7 +164,7 @@ require_once '../../includes/sidebar.php';
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <span class="badge rounded-pill w-100 py-3" style="background:#059669;">
+                    <span class="badge rounded-pill w-100 py-3" style="background:#2d6a9f;">
                         <?php echo $medicamentos_bajos ? $medicamentos_bajos->num_rows : 0; ?> medicamentos por debajo del límite
                     </span>
                 </div>
@@ -149,7 +212,6 @@ require_once '../../includes/sidebar.php';
                                         </div>
                                     </td>
                                     
-                                    <!-- AQUÍ ESTÁ LA CORRECCIÓN PARA EVITAR NEGATIVOS -->
                                     <td class="text-center">
                                         <input type="number" 
                                                class="input-solicitado cantidad-input" 
@@ -188,7 +250,7 @@ require_once '../../includes/sidebar.php';
         <div class="card-body p-4">
             <p class="text-muted small mb-3">
                 <i class="fas fa-info-circle me-1"></i>
-                <strong>Escribe la cantidad exacta a pedir</strong> en la columna verde. El sistema no pondrá límites; tú decides cuánto solicitar según la necesidad del centro.
+                <strong>Escribe la cantidad exacta a pedir</strong> en la columna azul. El sistema no pondrá límites; tú decides cuánto solicitar según la necesidad del centro.
             </p>
             <div class="d-flex flex-wrap gap-3">
                 <button class="btn btn-accion btn-pdf" onclick="generarPDF()">
@@ -218,7 +280,6 @@ function obtenerDatosTabla() {
             const id = input.getAttribute('data-id');
             const nombre = input.getAttribute('data-nombre');
             
-            // AQUÍ TAMBIÉN SE REFUERZA LA VALIDACIÓN: Convertir a entero
             let cantidad = parseInt(input.value, 10);
             
             if (!isNaN(cantidad) && cantidad > 0) {
@@ -232,7 +293,7 @@ function obtenerDatosTabla() {
 function generarPDF() {
     const datos = obtenerDatosTabla();
     if (datos.length === 0) {
-        Swal.fire('Atención', 'No has ingresado ninguna cantidad válida a pedir. Escribe números mayores a 0 en la columna verde.', 'warning');
+        Swal.fire('Atención', 'No has ingresado ninguna cantidad válida a pedir. Escribe números mayores a 0 en la columna azul.', 'warning');
         return;
     }
     
@@ -281,7 +342,7 @@ function enviarCorreo() {
         showCancelButton: true,
         confirmButtonText: '<i class="fas fa-paper-plane"></i> Enviar',
         cancelButtonText: 'Cancelar',
-        confirmButtonColor: '#1e40af',
+        confirmButtonColor: '#2d6a9f',
         cancelButtonColor: '#94a3b8',
         preConfirm: () => {
             const email = document.getElementById('emailDestino').value.trim();

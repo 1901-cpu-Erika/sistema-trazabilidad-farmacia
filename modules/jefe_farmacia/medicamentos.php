@@ -1,21 +1,32 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) session_save_path('/tmp'); // Clave para Vercel
+// Configuración estricta de sesión para Vercel
+if (session_status() === PHP_SESSION_NONE) {
+    session_save_path('/tmp'); // Clave para Vercel
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'secure' => true,
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
     session_start();
+}
+
 require_once '../../config/database.php';
-
-
 
 if ($_SESSION['tipo_usuario'] != 'jefe_farmacia') {
     header("Location: /login.php");
     exit();
 }
+
 $titulo_pagina = "Gestión de Medicamentos";
 require_once '../../includes/header.php';
 require_once '../../includes/sidebar.php';
 
-
 $mensaje = '';
 $tipo_mensaje = '';
+
+// Verificar columnas y tablas
 $result = $conn->query("SHOW COLUMNS FROM medicamentos LIKE 'estado'");
 if ($result->num_rows == 0) {
     $conn->query("ALTER TABLE medicamentos ADD COLUMN estado TINYINT DEFAULT 1");
@@ -40,8 +51,8 @@ if (!$tablas_existen) {
     $mensaje = "Error: " . $error_tablas . " Ejecuta el script SQL para crear las tablas.";
     $tipo_mensaje = "danger";
 }
+
 function generarCodigoMinsa($conn, $nombre) {
-    // Tomar las primeras 3 letras del nombre en mayúsculas
     $prefijo = strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $nombre), 0, 3));
     if (strlen($prefijo) < 3) {
         $prefijo = str_pad($prefijo, 3, 'X');
@@ -63,6 +74,22 @@ function generarCodigoMinsa($conn, $nombre) {
     return $prefijo . '-' . $numero_formateado;
 }
 
+function generarCodigoQR($medicamento_id, $lote_id) {
+    return 'QR-' . $medicamento_id . '-' . $lote_id . '-' . date('YmdHis');
+}
+
+// Endpoint para previsualizar el código
+if (isset($_GET['get_preview_code'])) {
+    $nombre_preview = $_GET['nombre'] ?? '';
+    if (!empty($nombre_preview)) {
+        echo generarCodigoMinsa($conn, $nombre_preview);
+    } else {
+        echo "Escribe el nombre...";
+    }
+    exit;
+}
+
+// LÓGICA DE CREACIÓN (Medicamento + Lote Inicial) Y EDICIÓN
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['accion']) && $tablas_existen) {
     $nombre = trim($_POST['nombre']);
     $codigo_minsa = trim($_POST['codigo_minsa'] ?? '');
@@ -74,26 +101,61 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['accion']) && $tablas_e
         $tipo_mensaje = "danger";
     } else {
         if ($_POST['accion'] == 'crear') {
-            if (empty($codigo_minsa)) {
-                $codigo_minsa = generarCodigoMinsa($conn, $nombre);
+            $cajas = intval($_POST['cajas'] ?? 0);
+            $contenido_caja = intval($_POST['contenido_caja'] ?? 1);
+            $pastillas_blister = intval($_POST['pastillas_blister'] ?? 1);
+            $unidades_sueltas = intval($_POST['unidades_sueltas'] ?? 0);
+            $fecha_vencimiento = $_POST['fecha_vencimiento'] ?? '';
+            $tipo_presentacion = $_POST['tipo_presentacion'] ?? 'pastillas';
+
+            if ($tipo_presentacion === 'pastillas' || $tipo_presentacion === 'frasco') {
+                $cantidad_total_unidades = ($cajas * $contenido_caja * $pastillas_blister) + $unidades_sueltas;
+            } else {
+                $cantidad_total_unidades = ($cajas * $contenido_caja) + $unidades_sueltas;
             }
-            
-            $sql = "INSERT INTO medicamentos (nombre, codigo_minsa, categoria_id, laboratorio_id, estado) 
-                    VALUES (?, ?, ?, ?, 1)";
-            $stmt = $conn->prepare($sql);
-            if (!$stmt) {
-                $mensaje = "Error al preparar la consulta: " . $conn->error;
+
+            if (empty($fecha_vencimiento) || $cantidad_total_unidades <= 0) {
+                $mensaje = "Debe ingresar una fecha de vencimiento válida y al menos 1 unidad en el lote.";
                 $tipo_mensaje = "danger";
             } else {
-                $stmt->bind_param("ssii", $nombre, $codigo_minsa, $categoria_id, $laboratorio_id);
-                if ($stmt->execute()) {
-                    $mensaje = "✅ Medicamento creado correctamente. Código: <strong>" . $codigo_minsa . "</strong>";
+                if (empty($codigo_minsa)) {
+                    $codigo_minsa = generarCodigoMinsa($conn, $nombre);
+                }
+
+                $conn->begin_transaction();
+                try {
+                    // 1. Insertar Medicamento
+                    $sql = "INSERT INTO medicamentos (nombre, codigo_minsa, categoria_id, laboratorio_id, estado) 
+                            VALUES (?, ?, ?, ?, 1)";
+                    $stmt = $conn->prepare($sql);
+                    if (!$stmt) throw new Exception("Error al preparar medicamento: " . $conn->error);
+                    $stmt->bind_param("ssii", $nombre, $codigo_minsa, $categoria_id, $laboratorio_id);
+                    $stmt->execute();
+                    $nuevo_medicamento_id = $stmt->insert_id;
+                    $stmt->close();
+
+                    // 2. Insertar Lote Inicial
+                    $codigo_qr_temp = generarCodigoQR($nuevo_medicamento_id, 'NEW');
+                    $sql_lote = "INSERT INTO lotes (medicamento_id, codigo_qr, cantidad, fecha_vencimiento) VALUES (?, ?, ?, ?)";
+                    $stmt_lote = $conn->prepare($sql_lote);
+                    if (!$stmt_lote) throw new Exception("Error al preparar lote: " . $conn->error);
+                    $stmt_lote->bind_param("isis", $nuevo_medicamento_id, $codigo_qr_temp, $cantidad_total_unidades, $fecha_vencimiento);
+                    $stmt_lote->execute();
+                    $nuevo_lote_id = $stmt_lote->insert_id;
+                    $stmt_lote->close();
+
+                    // 3. Actualizar QR con ID real
+                    $codigo_qr_real = generarCodigoQR($nuevo_medicamento_id, $nuevo_lote_id);
+                    $conn->query("UPDATE lotes SET codigo_qr = '$codigo_qr_real' WHERE id = $nuevo_lote_id");
+
+                    $conn->commit();
+                    $mensaje = "✅ Medicamento creado correctamente. Código: <strong>" . $codigo_minsa . "</strong>. Se ingresaron <b>$cantidad_total_unidades unidades</b>.";
                     $tipo_mensaje = "success";
-                } else {
-                    $mensaje = "Error al crear: " . $stmt->error;
+                } catch (Exception $e) {
+                    $conn->rollback();
+                    $mensaje = "Error al crear: " . $e->getMessage();
                     $tipo_mensaje = "danger";
                 }
-                $stmt->close();
             }
         } elseif ($_POST['accion'] == 'editar' && isset($_POST['id'])) {
             $id = intval($_POST['id']);
@@ -103,8 +165,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['accion']) && $tablas_e
                 $stmt_get = $conn->prepare($sql_get);
                 $stmt_get->bind_param("i", $id);
                 $stmt_get->execute();
-                $result_get = $stmt_get->get_result();
-                $row_get = $result_get->fetch_assoc();
+                $row_get = $stmt_get->get_result()->fetch_assoc();
                 $codigo_minsa = $row_get['codigo_minsa'];
                 $stmt_get->close();
             }
@@ -128,6 +189,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['accion']) && $tablas_e
         }
     }
 }
+
+// CAMBIAR ESTADO
 if (isset($_GET['cambiar_estado']) && is_numeric($_GET['cambiar_estado'])) {
     $id = intval($_GET['cambiar_estado']);
     $nuevo_estado = isset($_GET['suspender']) ? 0 : 1;
@@ -145,11 +208,10 @@ if (isset($_GET['cambiar_estado']) && is_numeric($_GET['cambiar_estado'])) {
             $tipo_mensaje = "danger";
         }
         $stmt->close();
-    } else {
-        $mensaje = "Error al preparar la consulta.";
-        $tipo_mensaje = "danger";
     }
 }
+
+// ELIMINAR
 if (isset($_GET['eliminar']) && is_numeric($_GET['eliminar'])) {
     $id = intval($_GET['eliminar']);
     
@@ -157,8 +219,7 @@ if (isset($_GET['eliminar']) && is_numeric($_GET['eliminar'])) {
     $stmt_check = $conn->prepare($sql_check);
     $stmt_check->bind_param("i", $id);
     $stmt_check->execute();
-    $result_check = $stmt_check->get_result();
-    $tiene_lotes = $result_check->fetch_assoc()['total'] > 0;
+    $tiene_lotes = $stmt_check->get_result()->fetch_assoc()['total'] > 0;
     $stmt_check->close();
 
     if ($tiene_lotes) {
@@ -177,12 +238,11 @@ if (isset($_GET['eliminar']) && is_numeric($_GET['eliminar'])) {
                 $tipo_mensaje = "danger";
             }
             $stmt->close();
-        } else {
-            $mensaje = "Error al preparar la eliminación.";
-            $tipo_mensaje = "danger";
         }
     }
 }
+
+// FILTROS Y PAGINACIÓN
 $categoria_filtro = isset($_GET['categoria']) ? intval($_GET['categoria']) : 0;
 $laboratorio_filtro = isset($_GET['laboratorio']) ? intval($_GET['laboratorio']) : 0;
 $estado_filtro = isset($_GET['estado']) ? intval($_GET['estado']) : 1;
@@ -264,13 +324,35 @@ $categorias = $tablas_existen ? $conn->query("SELECT id, nombre FROM categorias 
 $laboratorios = $tablas_existen ? $conn->query("SELECT id, nombre FROM laboratorios WHERE estado=1 ORDER BY nombre") : null;
 ?>
 
+<style>
+    /* ELIMINAR ESPACIO EN BLANCO SUPERIOR */
+    .main-content { padding-top: 0 !important; }
+    .container-fluid.px-4 { margin-top: -15px; }
+
+    /* PALETA AZUL LOGIN */
+    .glass-card { background: rgba(255,255,255,0.95); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.3); }
+    .bg-primary-subtle { background: #e0f2fe !important; color: #1a3a5c !important; }
+    .bg-secondary-subtle { background: #e2e3e5 !important; color: #383d41 !important; }
+    .bg-success-subtle { background: #d4edda !important; color: #155724 !important; }
+    .bg-warning-subtle { background: #fff3cd !important; color: #856404 !important; }
+    .bg-info-subtle { background: #d1ecf1 !important; color: #0c5460 !important; }
+    
+    .fade-in { animation: fadeUp 0.6s ease forwards; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    
+    /* Paginación Azul */
+    .page-item.active .page-link { background: #2d6a9f; border-color: #2d6a9f; color: #fff; }
+    .page-link { border: none; color: #4a5b7a; background: #f8f9fa; transition: all 0.2s; }
+    .page-link:hover { background: #e9ecef; color: #1a3a5c; transform: translateY(-2px); }
+</style>
+
 <div class="container-fluid px-4 fade-in">
 
     <div class="row g-4 mb-4">
         <div class="col-12">
-            <div class="card border-0 shadow-lg rounded-4 overflow-hidden" style="background: linear-gradient(135deg, #2d6a9f 0%, #1a3a5c 100%);">
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden" style="background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 100%);">
                 <div class="card-body p-4 text-white">
-                    <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                         <div>
                             <h2 class="display-6 fw-bold mb-1"><i class="fas fa-pills me-2"></i>Gestión de Medicamentos</h2>
                             <p class="opacity-75 mb-0">Administra el catálogo de medicamentos por categorías y laboratorios</p>
@@ -285,16 +367,18 @@ $laboratorios = $tablas_existen ? $conn->query("SELECT id, nombre FROM laborator
             </div>
         </div>
     </div>
+
     <?php if ($mensaje): ?>
         <div class="alert alert-<?php echo $tipo_mensaje; ?> alert-dismissible fade show rounded-4" role="alert">
             <?php echo $mensaje; ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     <?php endif; ?>
+
     <?php if ($tablas_existen): ?>
     <div class="card border-0 shadow-lg rounded-4 glass-card mb-4">
         <div class="card-header bg-transparent border-0 pt-4 px-4">
-            <h6 class="fw-bold text-primary mb-0"><i class="fas fa-sliders-h me-2"></i>Filtros</h6>
+            <h6 class="fw-bold mb-0" style="color: #1a3a5c;"><i class="fas fa-sliders-h me-2" style="color: #2d6a9f;"></i>Filtros</h6>
         </div>
         <div class="card-body p-4 pt-2">
             <form method="GET" action="" class="row g-3">
@@ -334,7 +418,7 @@ $laboratorios = $tablas_existen ? $conn->query("SELECT id, nombre FROM laborator
                            placeholder="Nombre o código" value="<?php echo htmlspecialchars($buscar); ?>">
                 </div>
                 <div class="col-md-1 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary btn-sm rounded-pill px-4 w-100">
+                    <button type="submit" class="btn rounded-pill px-4 w-100 text-white" style="background: linear-gradient(135deg, #1a3a5c, #2d6a9f); border: none;">
                         <i class="fas fa-search"></i>
                     </button>
                 </div>
@@ -342,14 +426,15 @@ $laboratorios = $tablas_existen ? $conn->query("SELECT id, nombre FROM laborator
         </div>
     </div>
     <?php endif; ?>
+
     <div class="card border-0 shadow-lg rounded-4 glass-card">
         <div class="card-header bg-transparent border-0 pt-4 px-4">
             <div class="d-flex justify-content-between align-items-center">
-                <h6 class="fw-bold text-primary mb-0">
-                    <i class="fas fa-list me-2"></i>Medicamentos
+                <h6 class="fw-bold mb-0" style="color: #1a3a5c;">
+                    <i class="fas fa-list me-2" style="color: #2d6a9f;"></i>Medicamentos
                 </h6>
                 <?php if ($tablas_existen): ?>
-                <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2">
+                <span class="badge rounded-pill px-3 py-2" style="background: #e0f2fe; color: #1a3a5c;">
                     <?php echo $total; ?> registros
                 </span>
                 <?php endif; ?>
@@ -375,7 +460,7 @@ $laboratorios = $tablas_existen ? $conn->query("SELECT id, nombre FROM laborator
                                 <tr>
                                     <td><span class="badge bg-secondary-subtle text-secondary rounded-pill">#<?php echo $med['id']; ?></span></td>
                                     <td>
-                                        <span class="badge bg-info-subtle text-info rounded-pill px-3 py-2">
+                                        <span class="badge rounded-pill px-3 py-2" style="background: #e0f2fe; color: #1a3a5c;">
                                             <?php echo htmlspecialchars($med['codigo_minsa'] ?? 'N/A'); ?>
                                         </span>
                                     </td>
@@ -413,11 +498,6 @@ $laboratorios = $tablas_existen ? $conn->query("SELECT id, nombre FROM laborator
                                 <td colspan="7" class="text-center py-5 text-muted">
                                     <i class="fas fa-pills fa-3x mb-3 d-block"></i>
                                     <h5><?php echo $tablas_existen ? 'No hay medicamentos que coincidan con los filtros' : 'Error: Las tablas de categorías y laboratorios no existen.'; ?></h5>
-                                    <?php if (!$tablas_existen): ?>
-                                    <p class="small">Ejecuta el script SQL para crear las tablas necesarias.</p>
-                                    <?php else: ?>
-                                    <p class="small">Haz clic en "Nuevo Medicamento" para agregar uno.</p>
-                                    <?php endif; ?>
                                 </td>
                             </tr>
                         <?php endif; ?>
@@ -429,12 +509,13 @@ $laboratorios = $tablas_existen ? $conn->query("SELECT id, nombre FROM laborator
 </div>
 
 <?php if ($tablas_existen): ?>
+<!-- MODAL AVANZADO: NUEVO MEDICAMENTO + LOTE INICIAL -->
 <div class="modal fade" id="modalMedicamento" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content glass-card rounded-4 border-0">
             <div class="modal-header border-0 pt-4 px-4">
-                <h5 class="modal-title fw-bold text-primary" id="modalTitle">
-                    <i class="fas fa-pills me-2"></i>Nuevo Medicamento
+                <h5 class="modal-title fw-bold" style="color: #1a3a5c;" id="modalTitle">
+                    <i class="fas fa-capsules me-2" style="color: #2d6a9f;"></i>Nuevo Medicamento y Lote Inicial
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
@@ -443,25 +524,10 @@ $laboratorios = $tablas_existen ? $conn->query("SELECT id, nombre FROM laborator
                     <input type="hidden" name="accion" id="accion" value="crear">
                     <input type="hidden" name="id" id="id" value="0">
 
-                    <div class="row g-3">
+                    <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold small">Nombre *</label>
-                            <input type="text" name="nombre" id="nombre" class="form-control rounded-pill border-0 bg-light" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold small">Código MINSA</label>
-                            <div class="input-group">
-                                <input type="text" name="codigo_minsa" id="codigo_minsa" class="form-control rounded-start-pill border-0 bg-light" 
-                                       placeholder="Se genera automáticamente">
-                                <button class="btn btn-outline-secondary rounded-end-pill" type="button" 
-                                        onclick="generarCodigo()" title="Generar código manualmente">
-                                    <i class="fas fa-sync-alt"></i>
-                                </button>
-                            </div>
-                            <small class="text-muted">
-                                <i class="fas fa-info-circle me-1"></i>
-                                Se genera automáticamente al guardar. Ejemplo: <strong>PAR-001</strong>
-                            </small>
+                            <label class="form-label fw-semibold small">Nombre del Medicamento *</label>
+                            <input type="text" name="nombre" id="nombre" class="form-control rounded-pill border-0 bg-light" required placeholder="Ej: Amoxicilina 500mg">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-semibold small">Categoría</label>
@@ -472,6 +538,12 @@ $laboratorios = $tablas_existen ? $conn->query("SELECT id, nombre FROM laborator
                                 <?php endwhile; endif; ?>
                             </select>
                         </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Código Asignado (Automático)</label>
+                            <input type="text" name="codigo_minsa" id="codigo_minsa" class="form-control rounded-pill border-0 bg-light fw-bold" value="Escribe el nombre..." readonly style="color: #2d6a9f; border-left: 4px solid #2d6a9f !important;">
+                        </div>
+                        
                         <div class="col-md-6">
                             <label class="form-label fw-semibold small">Laboratorio</label>
                             <select name="laboratorio_id" id="laboratorio_id" class="form-select rounded-pill border-0 bg-light">
@@ -482,10 +554,63 @@ $laboratorios = $tablas_existen ? $conn->query("SELECT id, nombre FROM laborator
                             </select>
                         </div>
                     </div>
+
+                    <!-- SECCIÓN DE LOTE (Oculta en modo edición) -->
+                    <div id="seccion_lote" class="p-3 rounded-4 bg-light border border-primary border-opacity-25">
+                        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                            <h6 class="fw-bold mb-0" style="color: #2d6a9f;"><i class="fas fa-calculator me-2"></i>Ingreso de Lote Inicial</h6>
+                            <div style="width: 320px;">
+                                <select id="tipo_presentacion" name="tipo_presentacion" class="form-select form-select-sm border-0 bg-white shadow-sm fw-bold text-dark" onchange="cambiarPresentacion()">
+                                    <option value="pastillas">💊 Pastillas / Cápsulas</option>
+                                    <option value="jarabe">🍯 Jarabes (Frascos)</option>
+                                    <option value="gotero">💧 Goteros (Unidades)</option>
+                                    <option value="frasco">🧴 Frasco de Pastillas</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row g-3 align-items-end text-center">
+                            <div class="col-md-3">
+                                <label class="form-label text-dark fw-bold small mb-1" id="lbl_nivel1">Cajas</label>
+                                <input type="number" name="cajas" id="calc_cajas" class="form-control text-center fw-bold" value="1" min="1" oninput="calcularUnidades()">
+                            </div>
+                            <div class="col-md-1 pb-2 text-muted"><i class="fas fa-times"></i></div>
+                            
+                            <div class="col-md-3">
+                                <label class="form-label text-dark fw-bold small mb-1" id="lbl_nivel2">Frascos por Caja</label>
+                                <input type="number" name="contenido_caja" id="calc_contenido" class="form-control text-center fw-bold" value="1" min="1" oninput="calcularUnidades()">
+                            </div>
+                            <div class="col-md-1 pb-2 text-muted" id="simbolo_x2"><i class="fas fa-times"></i></div>
+
+                            <div class="col-md-2">
+                                <label class="form-label text-dark fw-bold small mb-1" id="lbl_nivel3">Pastillas</label>
+                                <input type="number" name="pastillas_blister" id="calc_pastillas" class="form-control text-center fw-bold" value="1" min="1" oninput="calcularUnidades()">
+                            </div>
+                            <div class="col-md-1 pb-2 text-muted"><i class="fas fa-plus"></i></div>
+                            
+                            <div class="col-md-1">
+                                <label class="form-label text-dark fw-bold small mb-1" id="lbl_sueltas">Sueltos</label>
+                                <input type="number" name="unidades_sueltas" id="calc_sueltas" class="form-control text-center fw-bold" value="0" min="0" oninput="calcularUnidades()">
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">Fecha de Vencimiento *</label>
+                                <input type="date" name="fecha_vencimiento" id="fecha_vencimiento" class="form-control rounded-pill border-0 bg-white" required>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex justify-content-between align-items-center bg-white p-2 rounded-3 border h-100 mt-3 mt-md-0">
+                                    <h6 class="mb-0 fw-bold text-dark ms-2">Total:</h6>
+                                    <h4 class="mb-0 fw-bold me-2" id="total_pastillas_texto" style="color: #2d6a9f;">1 Pastilla</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer border-0 pb-4 px-4">
                     <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary rounded-pill px-4">
+                    <button type="submit" class="btn rounded-pill px-4 text-white" style="background: linear-gradient(135deg, #1a3a5c, #2d6a9f); border: none;">
                         <i class="fas fa-save me-1"></i> Guardar
                     </button>
                 </div>
@@ -494,21 +619,59 @@ $laboratorios = $tablas_existen ? $conn->query("SELECT id, nombre FROM laborator
     </div>
 </div>
 <?php endif; ?>
-<style>
-    .glass-card { background: rgba(255,255,255,0.95); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.3); }
-    .bg-primary-subtle { background: #d1ecf1 !important; color: #0c5460 !important; }
-    .bg-secondary-subtle { background: #e2e3e5 !important; color: #383d41 !important; }
-    .bg-success-subtle { background: #d4edda !important; color: #155724 !important; }
-    .bg-warning-subtle { background: #fff3cd !important; color: #856404 !important; }
-    .bg-info-subtle { background: #d1ecf1 !important; color: #0c5460 !important; }
-    .fade-in { animation: fadeUp 0.6s ease forwards; }
-    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    .page-item.active .page-link { background: #4e73df; border-color: #4e73df; color: #fff; }
-    .page-link { border: none; color: #4a5b7a; background: #f8f9fa; }
-    .page-link:hover { background: #e9ecef; color: #224abe; }
-</style>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const nombreInput = document.getElementById('nombre');
+    const previewInput = document.getElementById('codigo_minsa');
+    const seccionLote = document.getElementById('seccion_lote');
+    const fechaVencimiento = document.getElementById('fecha_vencimiento');
+
+    if (nombreInput && previewInput) {
+        nombreInput.addEventListener('input', function() {
+            let nombre = this.value;
+            // Solo generar preview si estamos creando
+            if (document.getElementById('accion').value === 'crear') {
+                if (nombre.trim().length > 0) {
+                    previewInput.value = "Calculando...";
+                    previewInput.style.color = '';
+
+                    fetch('?get_preview_code=1&nombre=' + encodeURIComponent(nombre), { cache: "no-store" })
+                        .then(response => response.text())
+                        .then(data => {
+                            if (!data.includes('<html')) {
+                                previewInput.value = data;
+                                previewInput.style.color = '#2d6a9f';
+                            }
+                        })
+                        .catch(() => {
+                            previewInput.value = "Error";
+                            previewInput.style.color = '#dc3545';
+                        });
+                } else {
+                    previewInput.value = "Escribe el nombre...";
+                    previewInput.style.color = '';
+                }
+            }
+        });
+    }
+
+    // Ocultar la sección de lote si es edición
+    const modalElement = document.getElementById('modalMedicamento');
+    if(modalElement) {
+        modalElement.addEventListener('hidden.bs.modal', function () {
+            document.getElementById('formMedicamento').reset();
+            document.getElementById('accion').value = 'crear';
+            document.getElementById('id').value = '0';
+            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-capsules me-2" style="color: #2d6a9f;"></i>Nuevo Medicamento y Lote Inicial';
+            document.getElementById('codigo_minsa').value = 'Escribe el nombre...';
+            document.getElementById('seccion_lote').style.display = 'block';
+            document.getElementById('fecha_vencimiento').required = true;
+        });
+    }
+});
+
 function editarMedicamento(id) {
     fetch('ajax_medicamento.php?id=' + id)
         .then(response => response.json())
@@ -519,7 +682,12 @@ function editarMedicamento(id) {
             document.getElementById('codigo_minsa').value = data.codigo_minsa || '';
             document.getElementById('categoria_id').value = data.categoria_id || '';
             document.getElementById('laboratorio_id').value = data.laboratorio_id || '';
-            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit me-2"></i>Editar Medicamento';
+            
+            // Ocultar la sección de lotes al editar y quitar el required
+            document.getElementById('seccion_lote').style.display = 'none';
+            document.getElementById('fecha_vencimiento').required = false;
+
+            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit me-2" style="color: #2d6a9f;"></i>Editar Medicamento';
             new bootstrap.Modal(document.getElementById('modalMedicamento')).show();
         })
         .catch(() => {
@@ -544,28 +712,99 @@ function eliminarMedicamento(id) {
     });
 }
 
-function generarCodigo() {
-    const nombre = document.getElementById('nombre').value;
-    if (!nombre) {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Nombre requerido',
-            text: 'Ingresa el nombre del medicamento primero para generar un código.',
-        });
-        return;
+/* LOGICA DE CALCULO DE LOTE */
+function cambiarPresentacion() {
+    let tipo = document.getElementById('tipo_presentacion').value;
+    let lbl1 = document.getElementById('lbl_nivel1');
+    let lbl2 = document.getElementById('lbl_nivel2');
+    let lbl3 = document.getElementById('lbl_nivel3');
+    let lbl4 = document.getElementById('lbl_sueltas');
+    
+    let val2 = document.getElementById('calc_contenido');
+    let val3 = document.getElementById('calc_pastillas');
+    let col3 = val3.closest('.col-md-2');
+    let simboloX2 = document.getElementById('simbolo_x2');
+
+    if (col3) col3.style.display = 'block';
+    if (simboloX2) simboloX2.style.display = 'block';
+
+    if (tipo === 'pastillas') {
+        lbl1.innerText = 'Cajas';
+        lbl2.innerText = 'Blísters x Caja';
+        lbl3.innerText = 'Pastillas x Blíster';
+        lbl4.innerText = 'Pastillas Sueltas';
+        val2.value = 10;
+        val3.value = 10;
+    } else if (tipo === 'jarabe') {
+        lbl1.innerText = 'Cajas';
+        lbl2.innerText = 'Frascos por Caja';
+        lbl3.innerText = 'Multiplicador';
+        lbl4.innerText = 'Frascos Sueltos';
+        val2.value = 1; 
+        val3.value = 1; 
+        if (col3) col3.style.display = 'none';
+        if (simboloX2) simboloX2.style.display = 'none';
+    } else if (tipo === 'gotero') {
+        lbl1.innerText = 'Cajas';
+        lbl2.innerText = 'Goteros por Caja';
+        lbl3.innerText = 'Multiplicador';
+        lbl4.innerText = 'Goteros Sueltos';
+        val2.value = 1; 
+        val3.value = 1; 
+        if (col3) col3.style.display = 'none';
+        if (simboloX2) simboloX2.style.display = 'none';
+    } else if (tipo === 'frasco') {
+        lbl1.innerText = 'Cajas';
+        lbl2.innerText = 'Frascos por Caja';
+        lbl3.innerText = 'Pastillas por Frasco';
+        lbl4.innerText = 'Pastillas Sueltas';
+        val2.value = 1; 
+        val3.value = 50; 
     }
-    const prefijo = nombre.substring(0, 3).toUpperCase().replace(/[^A-Z]/g, 'X');
-    const codigo = prefijo + '-' + String(Math.floor(Math.random() * 900) + 100);
-    document.getElementById('codigo_minsa').value = codigo;
+    calcularUnidades();
 }
 
-document.getElementById('modalMedicamento')?.addEventListener('hidden.bs.modal', function () {
-    document.getElementById('formMedicamento').reset();
-    document.getElementById('accion').value = 'crear';
-    document.getElementById('id').value = '0';
-    document.getElementById('modalTitle').innerHTML = '<i class="fas fa-pills me-2"></i>Nuevo Medicamento';
-    document.getElementById('codigo_minsa').value = '';
-});
+function calcularUnidades() {
+    let tipo = document.getElementById('tipo_presentacion').value;
+    let cajas = parseInt(document.getElementById('calc_cajas').value) || 0;
+    let contenido = parseInt(document.getElementById('calc_contenido').value) || 0;
+    let pastillas = parseInt(document.getElementById('calc_pastillas').value) || 1;
+    let sueltas = parseInt(document.getElementById('calc_sueltas').value) || 0;
+
+    let total = 0;
+    let unidad = 'Unidades';
+
+    if (tipo === 'pastillas') {
+        if (contenido === 0 || pastillas === 0) {
+            document.getElementById('total_pastillas_texto').innerText = "0 (Revisa campos)";
+            return;
+        }
+        total = (cajas * contenido * pastillas) + sueltas;
+        unidad = 'Pastillas';
+    } else if (tipo === 'jarabe') {
+        if (contenido === 0) {
+            document.getElementById('total_pastillas_texto').innerText = "0 (Revisa campos)";
+            return;
+        }
+        total = (cajas * contenido * 1) + sueltas;
+        unidad = 'Frascos';
+    } else if (tipo === 'gotero') {
+        if (contenido === 0) {
+            document.getElementById('total_pastillas_texto').innerText = "0 (Revisa campos)";
+            return;
+        }
+        total = (cajas * contenido * 1) + sueltas;
+        unidad = 'Goteros';
+    } else if (tipo === 'frasco') {
+        if (contenido === 0 || pastillas === 0) {
+            document.getElementById('total_pastillas_texto').innerText = "0 (Revisa campos)";
+            return;
+        }
+        total = (cajas * contenido * pastillas) + sueltas;
+        unidad = 'Pastillas';
+    }
+    document.getElementById('total_pastillas_texto').innerText = total.toLocaleString() + ' ' + unidad;
+}
 </script>
 
 <?php require_once '../../includes/footer.php'; ?>

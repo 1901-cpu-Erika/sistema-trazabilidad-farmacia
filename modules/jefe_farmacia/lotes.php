@@ -1,6 +1,17 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) session_save_path('/tmp'); // Clave para Vercel
+// Configuración estricta de sesión para Vercel
+if (session_status() === PHP_SESSION_NONE) {
+    session_save_path('/tmp'); // Clave para Vercel
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'secure' => true,
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
     session_start();
+}
+
 require_once __DIR__ . '/../../config/database.php';
 
 if (!isset($conn) || $conn === null) {
@@ -11,7 +22,6 @@ if ($_SESSION['tipo_usuario'] != 'jefe_farmacia') {
     header("Location: /login.php");
     exit();
 }
-
 
 function generarCodigoMedicamento($nombre, $conn) {
     $nombre_limpio = preg_replace('/[^a-zA-Z]/', '', $nombre);
@@ -51,7 +61,6 @@ if (isset($_GET['get_preview_code'])) {
     exit;
 }
 
-
 $titulo_pagina = "Gestión de Lotes";
 require_once __DIR__ . '/../../includes/header.php';
 require_once __DIR__ . '/../../includes/sidebar.php';
@@ -75,7 +84,6 @@ if (isset($_POST['crear_medicamento_lote'])) {
     $unidades_sueltas = intval($_POST['unidades_sueltas'] ?? 0);
 
     $tipo = $_POST['tipo_presentacion'] ?? 'pastillas';
-
 
     if ($tipo === 'pastillas' || $tipo === 'frasco') {
         $cantidad_total_unidades = ($cajas * $contenido_caja * $pastillas_blister) + $unidades_sueltas;
@@ -119,7 +127,6 @@ if (isset($_POST['crear_medicamento_lote'])) {
         }
     }
 }
-
 
 if (isset($_POST['agregar_lote'])) {
     $medicamento_id = intval($_POST['medicamento_id']);
@@ -191,7 +198,6 @@ if (isset($_GET['eliminar_lote']) && is_numeric($_GET['eliminar_lote'])) {
         }
     }
 }
-
 
 $medicamento_filtro = isset($_GET['medicamento']) ? intval($_GET['medicamento']) : 0;
 $estado_filtro = isset($_GET['estado']) ? $_GET['estado'] : 'todos';
@@ -273,6 +279,27 @@ $medicamentos_all = $conn->query($sql_medicamentos_all);
 $categorias = $conn->query("SELECT id, nombre FROM categorias ORDER BY nombre ASC");
 ?>
 
+<style>
+    /* ELIMINAR ESPACIO EN BLANCO SUPERIOR */
+    .main-content { padding-top: 0 !important; }
+    .container-fluid.px-4 { margin-top: -15px; }
+
+    /* PALETA AZUL LOGIN */
+    .glass-card { background: rgba(255,255,255,0.95); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.3); }
+    .bg-primary-subtle { background: #e0f2fe !important; color: #1a3a5c !important; }
+    .bg-success-subtle { background: #d4edda !important; color: #155724 !important; }
+    .bg-warning-subtle { background: #fff3cd !important; color: #856404 !important; }
+    .bg-danger-subtle { background: #f8d7da !important; color: #721c24 !important; }
+    .bg-secondary-subtle { background: #e2e3e5 !important; color: #383d41 !important; }
+    .fade-in { animation: fadeUp 0.6s ease forwards; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    
+    /* Paginación Azul */
+    .page-item.active .page-link { background: #2d6a9f; border-color: #2d6a9f; color: #fff; }
+    .page-link { border: none; color: #4a5b7a; background: #f8f9fa; transition: all 0.2s; }
+    .page-link:hover { background: #e9ecef; color: #1a3a5c; transform: translateY(-2px); }
+</style>
+
 <div class="container-fluid px-4 fade-in">
     <?php if ($mensaje): ?>
         <div class="alert alert-<?php echo $tipo_mensaje; ?> alert-dismissible fade show rounded-4" role="alert">
@@ -283,22 +310,21 @@ $categorias = $conn->query("SELECT id, nombre FROM categorias ORDER BY nombre AS
     
     <div class="row g-4 mb-4">
         <div class="col-12">
-            <div class="card border-0 shadow-lg rounded-4 overflow-hidden" style="background: linear-gradient(135deg, #2d6a9f 0%, #1a3a5c 100%);">
+            <!-- BANNER AZUL -->
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden" style="background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 100%);">
                 <div class="card-body p-4 text-white">
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                         <div>
                             <h2 class="display-6 fw-bold mb-1"><i class="fas fa-boxes me-2"></i>Gestión de Lotes</h2>
                             <p class="opacity-75 mb-0">Administra el inventario detallado por lotes y unidades</p>
                         </div>
-                        <div class="d-flex gap-2">
+                        <div class="d-flex gap-2 flex-wrap">
                             <a href="inventario.php" class="btn btn-light btn-lg rounded-pill px-4">
                                 <i class="fas fa-arrow-left me-2"></i> Dashboard
                             </a>
-                            <button class="btn btn-success btn-lg rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#modalCrearMedicamento">
-                                <i class="fas fa-capsules me-2"></i> Nuevo Medicamento
-                            </button>
-                            <button class="btn btn-primary btn-lg rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#modalAgregarLote">
-                                <i class="fas fa-plus-circle me-2"></i> Lote Extra
+                            <!-- ÚNICO BOTÓN DE ACCIÓN: LOTES -->
+                            <button class="btn btn-lg rounded-pill px-4 text-white" style="background: linear-gradient(135deg, #2d6a9f, #4fa3d1); border: none; box-shadow: 0 4px 15px rgba(45,106,159,0.3);" data-bs-toggle="modal" data-bs-target="#modalAgregarLote">
+                                <i class="fas fa-plus-circle me-2"></i> Lotes
                             </button>
                         </div>
                     </div>
@@ -307,9 +333,10 @@ $categorias = $conn->query("SELECT id, nombre FROM categorias ORDER BY nombre AS
         </div>
     </div>
 
+    <!-- FILTROS -->
     <div class="card border-0 shadow-lg rounded-4 glass-card mb-4">
         <div class="card-header bg-transparent border-0 pt-4 px-4">
-            <h6 class="fw-bold text-primary mb-0"><i class="fas fa-sliders-h me-2"></i>Filtros</h6>
+            <h6 class="fw-bold mb-0" style="color: #1a3a5c;"><i class="fas fa-sliders-h me-2" style="color: #2d6a9f;"></i>Filtros</h6>
         </div>
         <div class="card-body p-4 pt-2">
             <form method="GET" class="row g-3">
@@ -344,7 +371,7 @@ $categorias = $conn->query("SELECT id, nombre FROM categorias ORDER BY nombre AS
                            placeholder="Nombre, código MINSA o QR" value="<?php echo htmlspecialchars($buscar); ?>">
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary btn-sm rounded-pill px-4 w-100">
+                    <button type="submit" class="btn rounded-pill px-4 w-100 text-white" style="background: linear-gradient(135deg, #1a3a5c, #2d6a9f); border: none;">
                         <i class="fas fa-search me-1"></i> Buscar
                     </button>
                 </div>
@@ -352,11 +379,12 @@ $categorias = $conn->query("SELECT id, nombre FROM categorias ORDER BY nombre AS
         </div>
     </div>
     
+    <!-- TABLA DE LOTES -->
     <div class="card border-0 shadow-lg rounded-4 glass-card">
         <div class="card-header bg-transparent border-0 pt-4 px-4">
             <div class="d-flex justify-content-between align-items-center">
-                <h6 class="fw-bold text-primary mb-0"><i class="fas fa-list me-2"></i>Lotes en Inventario</h6>
-                <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2"><?php echo $total; ?> registros</span>
+                <h6 class="fw-bold mb-0" style="color: #1a3a5c;"><i class="fas fa-list me-2" style="color: #2d6a9f;"></i>Lotes en Inventario</h6>
+                <span class="badge rounded-pill px-3 py-2" style="background: #e0f2fe; color: #1a3a5c;"><?php echo $total; ?> registros</span>
             </div>
         </div>
         <div class="card-body p-4 pt-2">
@@ -393,16 +421,16 @@ $categorias = $conn->query("SELECT id, nombre FROM categorias ORDER BY nombre AS
                             ?>
                                 <tr>
                                     <td><span class="badge bg-secondary-subtle text-secondary rounded-pill">#<?php echo $lote['id']; ?></span></td>
-                                    <td><strong class="text-primary"><?php echo htmlspecialchars($lote['codigo_minsa']); ?></strong></td>
+                                    <td><strong style="color: #2d6a9f;"><?php echo htmlspecialchars($lote['codigo_minsa']); ?></strong></td>
                                     <td><strong><?php echo htmlspecialchars($lote['medicamento_nombre']); ?></strong></td>
                                     <td>
                                         <code><?php echo $lote['codigo_qr']; ?></code>
                                         <button class="btn btn-sm btn-link" onclick="copiarQR('<?php echo $lote['codigo_qr']; ?>')">
-                                            <i class="fas fa-copy"></i>
+                                            <i class="fas fa-copy" style="color: #2d6a9f;"></i>
                                         </button>
                                     </td>
                                     <td class="text-center">
-                                        <span class="badge bg-primary fs-6 rounded-pill px-3"><?php echo $lote['cantidad']; ?> uds</span>
+                                        <span class="badge rounded-pill px-3" style="background: #e0f2fe; color: #1a3a5c; font-size: 1rem;"><?php echo $lote['cantidad']; ?> uds</span>
                                     </td>
                                     <td><?php echo date('d/m/Y', strtotime($lote['fecha_vencimiento'])); ?></td>
                                     <td><span class="badge bg-<?php echo $badge; ?>-subtle text-<?php echo $badge; ?>-emphasis rounded-pill px-3 py-2"><?php echo $estado_texto; ?></span></td>
@@ -450,11 +478,12 @@ $categorias = $conn->query("SELECT id, nombre FROM categorias ORDER BY nombre AS
     </div>
 </div>
 
+<!-- MODAL NUEVO MEDICAMENTO (Se deja por si se usa en otra vista, pero sin botón en el banner) -->
 <div class="modal fade" id="modalCrearMedicamento" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content glass-card rounded-4 border-0">
             <div class="modal-header border-0 pt-4 px-4">
-                <h5 class="modal-title fw-bold text-success"><i class="fas fa-capsules me-2"></i>Nuevo Medicamento y Lote Inicial</h5>
+                <h5 class="modal-title fw-bold" style="color: #1a3a5c;"><i class="fas fa-capsules me-2" style="color: #2d6a9f;"></i>Nuevo Medicamento y Lote Inicial</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST">
@@ -481,7 +510,7 @@ $categorias = $conn->query("SELECT id, nombre FROM categorias ORDER BY nombre AS
                         
                         <div class="col-md-6">
                             <label class="form-label fw-semibold small">Código Asignado (Automático)</label>
-                            <input type="text" id="preview_codigo" class="form-control rounded-pill border-0 bg-light fw-bold text-success" value="Escribe el nombre..." readonly style="border-left: 4px solid #198754 !important;">
+                            <input type="text" id="preview_codigo" class="form-control rounded-pill border-0 bg-light fw-bold" value="Escribe el nombre..." readonly style="color: #2d6a9f; border-left: 4px solid #2d6a9f !important;">
                         </div>
                         
                         <div class="col-md-6">
@@ -494,11 +523,9 @@ $categorias = $conn->query("SELECT id, nombre FROM categorias ORDER BY nombre AS
                         </div>
                     </div>
 
-   
-                    <div class="p-3 rounded-4 bg-light border border-success border-opacity-25">
-  
+                    <div class="p-3 rounded-4 bg-light border border-primary border-opacity-25">
                         <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-                            <h6 class="fw-bold text-success mb-0"><i class="fas fa-calculator me-2"></i>Ingreso de Lote Inicial</h6>
+                            <h6 class="fw-bold mb-0" style="color: #2d6a9f;"><i class="fas fa-calculator me-2"></i>Ingreso de Lote Inicial</h6>
                             <div style="width: 320px;">
                                 <select id="tipo_presentacion" name="tipo_presentacion" class="form-select form-select-sm border-0 bg-white shadow-sm fw-bold text-dark" onchange="cambiarPresentacion()">
                                     <option value="pastillas">💊 Pastillas / Cápsulas</option>
@@ -510,7 +537,6 @@ $categorias = $conn->query("SELECT id, nombre FROM categorias ORDER BY nombre AS
                         </div>
                         
                         <div class="row g-3 align-items-end text-center">
-                        
                             <div class="col-md-3">
                                 <label class="form-label text-dark fw-bold small mb-1" id="lbl_nivel1">Cajas</label>
                                 <input type="number" name="cajas" id="calc_cajas" class="form-control text-center fw-bold" value="1" min="1" oninput="calcularUnidades()">
@@ -538,14 +564,13 @@ $categorias = $conn->query("SELECT id, nombre FROM categorias ORDER BY nombre AS
                         <hr class="my-3">
                         <div class="d-flex justify-content-between align-items-center bg-white p-3 rounded-3 border">
                             <h6 class="mb-0 fw-bold text-dark">Total a ingresar:</h6>
-                            <h4 class="mb-0 fw-bold text-success" id="total_pastillas_texto">1 Frasco</h4>
+                            <h4 class="mb-0 fw-bold" id="total_pastillas_texto" style="color: #2d6a9f;">1 Frasco</h4>
                         </div>
                     </div>
-
                 </div>
                 <div class="modal-footer border-0 pb-4 px-4">
                     <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" name="crear_medicamento_lote" class="btn btn-success rounded-pill px-4">
+                    <button type="submit" name="crear_medicamento_lote" class="btn rounded-pill px-4 text-white" style="background: linear-gradient(135deg, #1a3a5c, #2d6a9f); border: none;">
                         <i class="fas fa-save me-1"></i> Crear Medicamento
                     </button>
                 </div>
@@ -554,11 +579,12 @@ $categorias = $conn->query("SELECT id, nombre FROM categorias ORDER BY nombre AS
     </div>
 </div>
 
+<!-- MODAL AGREGAR LOTE -->
 <div class="modal fade" id="modalAgregarLote" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content glass-card rounded-4 border-0">
             <div class="modal-header border-0 pt-4 px-4">
-                <h5 class="modal-title fw-bold text-primary"><i class="fas fa-plus-circle me-2"></i>Agregar Lote Extra</h5>
+                <h5 class="modal-title fw-bold" style="color: #1a3a5c;"><i class="fas fa-plus-circle me-2" style="color: #2d6a9f;"></i>Agregar Lote</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST">
@@ -589,7 +615,7 @@ $categorias = $conn->query("SELECT id, nombre FROM categorias ORDER BY nombre AS
                 </div>
                 <div class="modal-footer border-0 pb-4 px-4">
                     <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" name="agregar_lote" class="btn btn-primary rounded-pill px-4">
+                    <button type="submit" name="agregar_lote" class="btn rounded-pill px-4 text-white" style="background: linear-gradient(135deg, #1a3a5c, #2d6a9f); border: none;">
                         <i class="fas fa-save me-1"></i> Guardar Lote
                     </button>
                 </div>
@@ -598,6 +624,7 @@ $categorias = $conn->query("SELECT id, nombre FROM categorias ORDER BY nombre AS
     </div>
 </div>
 
+<!-- MODAL EDITAR CANTIDAD -->
 <div class="modal fade" id="modalEditarCantidad" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content glass-card rounded-4 border-0">
@@ -615,7 +642,7 @@ $categorias = $conn->query("SELECT id, nombre FROM categorias ORDER BY nombre AS
                 </div>
                 <div class="modal-footer border-0 pb-4 px-4">
                     <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" name="actualizar_cantidad" class="btn btn-primary rounded-pill px-4">
+                    <button type="submit" name="actualizar_cantidad" class="btn rounded-pill px-4 text-white" style="background: linear-gradient(135deg, #1a3a5c, #2d6a9f); border: none;">
                         <i class="fas fa-save me-1"></i> Actualizar
                     </button>
                 </div>
@@ -624,22 +651,7 @@ $categorias = $conn->query("SELECT id, nombre FROM categorias ORDER BY nombre AS
     </div>
 </div>
 
-<style>
-    .glass-card { background: rgba(255,255,255,0.95); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.3); }
-    .bg-primary-subtle { background: #d1ecf1 !important; color: #0c5460 !important; }
-    .bg-success-subtle { background: #d4edda !important; color: #155724 !important; }
-    .bg-warning-subtle { background: #fff3cd !important; color: #856404 !important; }
-    .bg-danger-subtle { background: #f8d7da !important; color: #721c24 !important; }
-    .bg-secondary-subtle { background: #e2e3e5 !important; color: #383d41 !important; }
-    .fade-in { animation: fadeUp 0.6s ease forwards; }
-    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    .page-item.active .page-link { background: #4e73df; border-color: #4e73df; color: #fff; }
-    .page-link { border: none; color: #4a5b7a; background: #f8f9fa; }
-    .page-link:hover { background: #e9ecef; color: #224abe; }
-</style>
-
 <script>
-
 document.addEventListener('DOMContentLoaded', function() {
     const nombreInput = document.getElementById('nombre_medicamento');
     const previewInput = document.getElementById('preview_codigo');
@@ -651,7 +663,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (nombre.trim().length > 0) {
                 previewInput.value = "Calculando...";
                 previewInput.classList.add('text-muted');
-                previewInput.classList.remove('text-success');
+                previewInput.style.color = '';
 
                 fetch('?get_preview_code=1&nombre=' + encodeURIComponent(nombre), { cache: "no-store" })
                     .then(response => {
@@ -661,22 +673,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     .then(data => {
                         if (data.includes('<html') || data.includes('<!DOCTYPE')) {
                             previewInput.value = "Error de sesión";
-                            previewInput.classList.add('text-danger');
+                            previewInput.style.color = '#dc3545';
                         } else {
                             previewInput.value = data;
-                            previewInput.classList.remove('text-muted', 'text-danger');
-                            previewInput.classList.add('text-success');
+                            previewInput.classList.remove('text-muted');
+                            previewInput.style.color = '#2d6a9f';
                         }
                     })
                     .catch(error => {
                         console.error(error);
                         previewInput.value = "Error al generar";
-                        previewInput.classList.add('text-danger');
+                        previewInput.style.color = '#dc3545';
                     });
             } else {
                 previewInput.value = "Escribe el nombre...";
                 previewInput.classList.remove('text-success', 'text-danger');
                 previewInput.classList.add('text-muted');
+                previewInput.style.color = '';
             }
         });
     }

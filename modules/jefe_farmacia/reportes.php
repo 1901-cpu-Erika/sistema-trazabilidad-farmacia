@@ -1,12 +1,24 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) session_save_path('/tmp'); // Clave para Vercel
+// Configuración estricta de sesión para Vercel
+if (session_status() === PHP_SESSION_NONE) {
+    session_save_path('/tmp'); // Clave para Vercel
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'secure' => true,
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
     session_start();
+}
+
 require_once '../../config/database.php';
 
 if (!isset($_SESSION['usuario_id']) || $_SESSION['tipo_usuario'] != 'jefe_farmacia') {
     header("Location: /login.php");
     exit();
 }
+
 $fecha_inicio = $_GET['fecha_inicio'] ?? date('Y-m-01');
 $fecha_fin    = $_GET['fecha_fin']    ?? date('Y-m-d');
 
@@ -84,16 +96,22 @@ require_once '../../includes/sidebar.php';
 ?>
 
 <style>
+    /* ELIMINAR ESPACIO EN BLANCO SUPERIOR */
+    .main-content { padding-top: 0 !important; }
+    .container-fluid.px-4 { margin-top: -15px; }
+
+    /* PALETA AZUL DEL LOGIN */
     :root {
-        --rep-primary: #059669;
-        --rep-dark: #065f46;
-        --rep-light: #d1fae5;
+        --rep-primary: #2d6a9f;
+        --rep-dark: #1a3a5c;
+        --rep-light: #e0f2fe;
     }
+    
     .rep-hero {
-        background: linear-gradient(135deg, var(--rep-dark) 0%, var(--rep-primary) 55%, #10b981 100%);
+        background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 55%, #4fa3d1 100%);
         border-radius: 22px; padding: 32px 34px; color: #fff;
         position: relative; overflow: hidden;
-        box-shadow: 0 15px 40px rgba(5,150,105,0.25); margin-bottom: 26px;
+        box-shadow: 0 15px 40px rgba(45,106,159,0.25); margin-bottom: 26px;
     }
     .rep-hero::before {
         content: '\f080'; font-family: "Font Awesome 6 Free"; font-weight: 900;
@@ -127,15 +145,15 @@ require_once '../../includes/sidebar.php';
         border-radius: 12px; border: 1px solid #e2e8f0; padding: 10px 16px;
         font-size: 0.9rem; background: #f8fafc; transition: all 0.2s;
     }
-    .rep-filter .form-control:focus { border-color: var(--rep-primary); box-shadow: 0 0 0 4px rgba(5,150,105,0.1); background: #fff; }
+    .rep-filter .form-control:focus { border-color: var(--rep-primary); box-shadow: 0 0 0 4px rgba(45,106,159,0.15); background: #fff; }
     
     .rep-btn-primary {
         background: linear-gradient(135deg, var(--rep-dark), var(--rep-primary));
         color: #fff; border: none; border-radius: 12px; padding: 10px 22px; font-weight: 600; transition: all 0.25s;
     }
-    .rep-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(5,150,105,0.3); color: #fff; }
+    .rep-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(45,106,159,0.3); color: #fff; }
 
-    /* --- TARJETAS UNIFICADAS ESTILO DASHBOARD --- */
+    /* --- TARJETAS UNIFICADAS ESTILO DASHBOARD (INTACTAS) --- */
     .stat-card {
         border: none; border-radius: 18px; color: white;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -145,14 +163,13 @@ require_once '../../includes/sidebar.php';
     .stat-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.15); }
     .stat-card.clickable:hover { filter: brightness(1.05); }
     
-    /* Nuevos colores para los KPIs */
+    /* Colores originales de los KPIs */
     .card-blue   { background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); }
     .card-teal   { background: linear-gradient(135deg, #115e59 0%, #14b8a6 100%); }
     .card-purple { background: linear-gradient(135deg, #4c1d95 0%, #8b5cf6 100%); }
     .card-red    { background: linear-gradient(135deg, #991b1b 0%, #ef4444 100%); }
     .card-green  { background: linear-gradient(135deg, #047857 0%, #10b981 100%); }
     
-    /* Ajuste para que el texto no se corte */
     .stat-card .card-body { padding: 1.25rem !important; }
     .stat-card p { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .stat-card h3 { font-size: 1.8rem; }
@@ -469,7 +486,9 @@ require_once '../../includes/sidebar.php';
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const PALETA = ['#7c3aed','#a78bfa','#3b82f6','#10b981','#f59e0b','#ef4444','#06b6d4','#8b5cf6','#ec4899','#22c55e'];
+    // Paleta actualizada a azules
+    const PALETA = ['#2d6a9f','#4fa3d1','#3b82f6','#10b981','#f59e0b','#ef4444','#06b6d4','#1a3a5c','#ec4899','#22c55e'];
+    
     const sinDatos = (id) => {
         const c = document.getElementById(id);
         if (c) c.parentElement.innerHTML = '<div class="text-center py-5 text-muted"><i class="fas fa-inbox fa-3x mb-3 d-block opacity-25"></i><p class="mb-0 fw-semibold">Sin datos en este rango</p></div>';
@@ -486,7 +505,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const estData = <?php echo json_encode($estados_data); ?>;
     if (estData.length) {
         new Chart(document.getElementById('chartEstados'), {
-            type: 'doughnut', data: { labels: <?php echo json_encode($estados_labels); ?>, datasets: [{ data: estData, backgroundColor: ['#10b981','#f59e0b','#ef4444','#3b82f6','#7c3aed'], borderWidth: 0 }] },
+            type: 'doughnut', data: { labels: <?php echo json_encode($estados_labels); ?>, datasets: [{ data: estData, backgroundColor: ['#10b981','#f59e0b','#ef4444','#3b82f6','#2d6a9f'], borderWidth: 0 }] },
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { padding: 20, font: { size: 13, weight: 'bold' } } } }, cutout: '70%' }
         });
     } else sinDatos('chartEstados');
@@ -494,7 +513,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const docData = <?php echo json_encode($doc_data); ?>;
     if (docData.length) {
         new Chart(document.getElementById('chartDoctores'), {
-            type: 'bar', data: { labels: <?php echo json_encode($doc_labels); ?>, datasets: [{ label: 'Recetas', data: docData, backgroundColor: '#3b82f6', borderRadius: 8 }] },
+            type: 'bar', data: { labels: <?php echo json_encode($doc_labels); ?>, datasets: [{ label: 'Recetas', data: docData, backgroundColor: '#2d6a9f', borderRadius: 8 }] },
             options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { precision: 0 } } } }
         });
     } else sinDatos('chartDoctores');
@@ -502,7 +521,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const mesData = <?php echo json_encode($meses_data); ?>;
     if (mesData.length) {
         new Chart(document.getElementById('chartMeses'), {
-            type: 'line', data: { labels: <?php echo json_encode($meses_labels); ?>, datasets: [{ label: 'Recetas', data: mesData, borderColor: '#7c3aed', backgroundColor: 'rgba(124,58,237,0.1)', fill: true, tension: 0.4, pointBackgroundColor: '#7c3aed', pointRadius: 5, pointHoverRadius: 7, borderWidth: 3 }] },
+            type: 'line', data: { labels: <?php echo json_encode($meses_labels); ?>, datasets: [{ label: 'Recetas', data: mesData, borderColor: '#2d6a9f', backgroundColor: 'rgba(45,106,159,0.1)', fill: true, tension: 0.4, pointBackgroundColor: '#2d6a9f', pointRadius: 5, pointHoverRadius: 7, borderWidth: 3 }] },
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
         });
     } else sinDatos('chartMeses');
