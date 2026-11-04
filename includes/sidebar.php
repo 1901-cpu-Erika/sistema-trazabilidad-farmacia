@@ -210,7 +210,24 @@ $nombre_rol = match($tipo_usuario) {
     .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 8px; }
     .sidebar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
 
-    .row > [class^="col-"], .row > [class*=" col-"] { min-width: 0; }
+   /* =========================================================
+   ARREGLO PARA EL MENÚ LATERAL EN MÓVILES (SCROLL EN VERCEL)
+   ========================================================= */
+@media (max-width: 991px) {
+    /* Cuando el menú se abre en el celular (.sidebar.show), forzamos el scroll */
+    .sidebar.show {
+        height: 100vh !important;
+        height: 100dvh !important; /* Altura dinámica para que la barra del navegador no lo corte */
+        overflow-y: scroll !important;
+        -webkit-overflow-scrolling: touch; /* Scroll suave en iOS */
+        padding-bottom: 80px !important; /* Espacio extra abajo para que el botón de cerrar sesión no quede pegado al borde */
+    }
+    
+    /* Aseguramos que el menú de navegación interno no oculte nada */
+    .sidebar .nav {
+        overflow: visible !important;
+    }
+}
 </style>
 
 <nav class="sidebar">
