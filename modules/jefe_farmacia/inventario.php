@@ -1,6 +1,17 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) session_save_path('/tmp'); // Clave para Vercel
+// Configuración estricta de sesión para Vercel
+if (session_status() === PHP_SESSION_NONE) {
+    session_save_path('/tmp');
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'secure' => true,
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
     session_start();
+}
+
 require_once __DIR__ . '/../../config/database.php';
 if (!isset($conn) || $conn === null) {
     die('Error: No se pudo establecer la conexión a la base de datos. Verifica el archivo config/database.php');
@@ -10,25 +21,31 @@ if ($_SESSION['tipo_usuario'] != 'jefe_farmacia') {
     header("Location: /login.php");
     exit();
 }
+
 $titulo_pagina = "Dashboard de Bodega";
 require_once __DIR__ . '/../../includes/header.php';
 require_once __DIR__ . '/../../includes/sidebar.php';
+
 $total_lotes = 0;
 $total_unidades = 0;
 $por_vencer = 0;
 $stock_critico = 0;
+
 $result = $conn->query("SELECT COUNT(*) as total FROM lotes");
 if ($result) {
     $total_lotes = $result->fetch_assoc()['total'] ?? 0;
 }
+
 $result = $conn->query("SELECT SUM(cantidad) as total FROM lotes");
 if ($result) {
     $total_unidades = $result->fetch_assoc()['total'] ?? 0;
 }
+
 $result = $conn->query("SELECT COUNT(*) as total FROM lotes WHERE fecha_vencimiento BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY)");
 if ($result) {
     $por_vencer = $result->fetch_assoc()['total'] ?? 0;
 }
+
 $result = $conn->query("SELECT COUNT(*) as total FROM lotes WHERE cantidad < 10");
 if ($result) {
     $stock_critico = $result->fetch_assoc()['total'] ?? 0;
@@ -45,6 +62,7 @@ $stock_medicamentos = $conn->query("
     ORDER BY stock_total ASC
     LIMIT 10
 ");
+
 $alertas = $conn->query("
     SELECT l.*, m.nombre as medicamento_nombre 
     FROM lotes l 
@@ -55,10 +73,37 @@ $alertas = $conn->query("
 ");
 ?>
 
+<style>
+    /* ELIMINAR ESPACIO EN BLANCO SUPERIOR */
+    .main-content { padding-top: 0 !important; }
+    .container-fluid.px-4 { margin-top: -15px; }
+
+    .glass-card {
+        background: rgba(255,255,255,0.95);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255,255,255,0.3);
+    }
+    .stat-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 30px rgba(0,0,0,0.08) !important;
+    }
+    .bg-primary-subtle { background: #e0f2fe !important; color: #1a3a5c !important; }
+    .bg-success-subtle { background: #d4edda !important; color: #155724 !important; }
+    .bg-warning-subtle { background: #fff3cd !important; color: #856404 !important; }
+    .bg-danger-subtle { background: #f8d7da !important; color: #721c24 !important; }
+    .bg-secondary-subtle { background: #e2e3e5 !important; color: #383d41 !important; }
+    .fade-in { animation: fadeUp 0.6s ease forwards; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+
 <div class="container-fluid px-4 fade-in">
 
     <div class="row g-4 mb-4">
         <div class="col-12">
+            <!-- Banner Azul Login -->
             <div class="card border-0 shadow-lg rounded-4 overflow-hidden" style="background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 100%);">
                 <div class="card-body p-4 text-white">
                     <div class="d-flex align-items-center">
@@ -74,6 +119,7 @@ $alertas = $conn->query("
             </div>
         </div>
     </div>
+
     <?php if ($alertas && $alertas->num_rows > 0): ?>
         <div class="alert alert-danger alert-dismissible fade show rounded-4" role="alert">
             <div class="d-flex align-items-center">
@@ -94,66 +140,72 @@ $alertas = $conn->query("
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     <?php endif; ?>
+
     <div class="row g-3 mb-4">
+        <!-- Tarjeta Azul -->
         <div class="col-xl-3 col-md-6">
-            <div class="card border-0 shadow-sm rounded-4 h-100 stat-card">
+            <div class="card border-0 shadow-sm rounded-4 h-100 stat-card" style="border-left: 4px solid #2d6a9f;">
                 <div class="card-body d-flex align-items-center">
-                    <div class="rounded-circle bg-primary bg-opacity-10 p-3 me-3">
-                        <i class="fas fa-boxes text-primary fa-2x"></i>
+                    <div class="rounded-circle p-3 me-3" style="background: rgba(45, 106, 159, 0.1);">
+                        <i class="fas fa-boxes fa-2x" style="color: #2d6a9f;"></i>
                     </div>
                     <div>
-                        <h5 class="fw-bold mb-0"><?php echo $total_lotes; ?></h5>
+                        <h5 class="fw-bold mb-0" style="color: #1a3a5c;"><?php echo $total_lotes; ?></h5>
                         <small class="text-muted">Total de lotes</small>
                     </div>
                 </div>
             </div>
         </div>
+        <!-- Tarjeta Verde -->
         <div class="col-xl-3 col-md-6">
-            <div class="card border-0 shadow-sm rounded-4 h-100 stat-card">
+            <div class="card border-0 shadow-sm rounded-4 h-100 stat-card" style="border-left: 4px solid #10b981;">
                 <div class="card-body d-flex align-items-center">
-                    <div class="rounded-circle bg-success bg-opacity-10 p-3 me-3">
-                        <i class="fas fa-capsules text-success fa-2x"></i>
+                    <div class="rounded-circle p-3 me-3" style="background: rgba(16, 185, 129, 0.1);">
+                        <i class="fas fa-capsules fa-2x" style="color: #10b981;"></i>
                     </div>
                     <div>
-                        <h5 class="fw-bold mb-0"><?php echo number_format($total_unidades); ?></h5>
+                        <h5 class="fw-bold mb-0" style="color: #1a3a5c;"><?php echo number_format($total_unidades); ?></h5>
                         <small class="text-muted">Unidades totales</small>
                     </div>
                 </div>
             </div>
         </div>
+        <!-- Tarjeta Naranja -->
         <div class="col-xl-3 col-md-6">
-            <div class="card border-0 shadow-sm rounded-4 h-100 stat-card">
+            <div class="card border-0 shadow-sm rounded-4 h-100 stat-card" style="border-left: 4px solid #f59e0b;">
                 <div class="card-body d-flex align-items-center">
-                    <div class="rounded-circle bg-warning bg-opacity-10 p-3 me-3">
-                        <i class="fas fa-clock text-warning fa-2x"></i>
+                    <div class="rounded-circle p-3 me-3" style="background: rgba(245, 158, 11, 0.1);">
+                        <i class="fas fa-clock fa-2x" style="color: #f59e0b;"></i>
                     </div>
                     <div>
-                        <h5 class="fw-bold mb-0"><?php echo $por_vencer; ?></h5>
+                        <h5 class="fw-bold mb-0" style="color: #1a3a5c;"><?php echo $por_vencer; ?></h5>
                         <small class="text-muted">Por vencer (30 días)</small>
                     </div>
                 </div>
             </div>
         </div>
+        <!-- Tarjeta Roja -->
         <div class="col-xl-3 col-md-6">
-            <div class="card border-0 shadow-sm rounded-4 h-100 stat-card">
+            <div class="card border-0 shadow-sm rounded-4 h-100 stat-card" style="border-left: 4px solid #ef4444;">
                 <div class="card-body d-flex align-items-center">
-                    <div class="rounded-circle bg-danger bg-opacity-10 p-3 me-3">
-                        <i class="fas fa-exclamation-circle text-danger fa-2x"></i>
+                    <div class="rounded-circle p-3 me-3" style="background: rgba(239, 68, 68, 0.1);">
+                        <i class="fas fa-exclamation-circle fa-2x" style="color: #ef4444;"></i>
                     </div>
                     <div>
-                        <h5 class="fw-bold mb-0"><?php echo $stock_critico; ?></h5>
+                        <h5 class="fw-bold mb-0" style="color: #1a3a5c;"><?php echo $stock_critico; ?></h5>
                         <small class="text-muted">Stock crítico (&lt; 10)</small>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
     <div class="row">
         <div class="col-12">
             <div class="card border-0 shadow-lg rounded-4 glass-card">
                 <div class="card-header bg-transparent border-0 pt-4 px-4">
-                    <h6 class="fw-bold text-primary mb-0">
-                        <i class="fas fa-list me-2"></i>Stock por Medicamento (10 con menos stock)
+                    <h6 class="fw-bold mb-0" style="color: #1a3a5c;">
+                        <i class="fas fa-list me-2" style="color: #2d6a9f;"></i>Stock por Medicamento (10 con menos stock)
                     </h6>
                 </div>
                 <div class="card-body p-4 pt-2">
@@ -194,7 +246,7 @@ $alertas = $conn->query("
                         </table>
                     </div>
                     <div class="mt-3 text-center">
-                        <a href="lotes.php" class="btn btn-primary rounded-pill px-4">
+                        <a href="lotes.php" class="btn rounded-pill px-4 text-white" style="background: linear-gradient(135deg, #1a3a5c, #2d6a9f); border: none;">
                             <i class="fas fa-arrow-right me-1"></i> Ver gestión de lotes
                         </a>
                     </div>
@@ -203,26 +255,5 @@ $alertas = $conn->query("
         </div>
     </div>
 </div>
-<style>
-    .glass-card {
-        background: rgba(255,255,255,0.95);
-        backdrop-filter: blur(8px);
-        border: 1px solid rgba(255,255,255,0.3);
-    }
-    .stat-card {
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .stat-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 12px 30px rgba(0,0,0,0.08) !important;
-    }
-    .bg-primary-subtle { background: #d1ecf1 !important; color: #0c5460 !important; }
-    .bg-success-subtle { background: #d4edda !important; color: #155724 !important; }
-    .bg-warning-subtle { background: #fff3cd !important; color: #856404 !important; }
-    .bg-danger-subtle { background: #f8d7da !important; color: #721c24 !important; }
-    .bg-secondary-subtle { background: #e2e3e5 !important; color: #383d41 !important; }
-    .fade-in { animation: fadeUp 0.6s ease forwards; }
-    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-</style>
 
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>

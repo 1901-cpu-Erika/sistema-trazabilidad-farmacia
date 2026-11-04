@@ -33,24 +33,30 @@ else $saludo = "Buenas noches";
 ?>
 
 <style>
+    /* ELIMINAR ESPACIO EN BLANCO */
+    .main-content { padding-top: 0 !important; }
+    .container-fluid.px-4 { margin-top: -15px; }
+
+    /* PALETA AZUL DEL LOGIN */
     :root {
-        --ad-primary: #dc2626;
-        --ad-primary-dark: #7f1d1d;
-        --ad-primary-light: #fef2f2;
+        --ad-primary: #2d6a9f;
+        --ad-primary-dark: #1a3a5c;
+        --ad-primary-light: #e0f2fe;
         --ad-teal: #0891b2;
         --ad-green: #059669;
         --ad-blue: #2563eb;
         --ad-purple: #7c3aed;
         --ad-amber: #d97706;
     }
+    
     .ad-hero {
-        background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 55%, #ef4444 100%);
+        background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 55%, #4fa3d1 100%);
         border-radius: 24px;
         padding: 36px 40px;
         color: #fff;
         position: relative;
         overflow: hidden;
-        box-shadow: 0 20px 50px rgba(220, 38, 38, 0.25);
+        box-shadow: 0 20px 50px rgba(45, 106, 159, 0.25);
         margin-bottom: 28px;
     }
 
@@ -139,7 +145,7 @@ else $saludo = "Buenas noches";
         position: absolute;
         top: 0; left: 0;
         width: 4px; height: 100%;
-        background: var(--kpi-color, #dc2626);
+        background: var(--kpi-color, #2d6a9f);
         transition: width 0.35s;
     }
 
@@ -274,7 +280,7 @@ else $saludo = "Buenas noches";
 
     .ad-action-card:hover {
         border-color: var(--ad-primary);
-        background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+        background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
         border-style: solid;
     }
 
@@ -282,14 +288,14 @@ else $saludo = "Buenas noches";
         width: 90px;
         height: 90px;
         border-radius: 24px;
-        background: linear-gradient(135deg, #7f1d1d, #dc2626);
+        background: linear-gradient(135deg, #1a3a5c, #2d6a9f);
         color: #fff;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         font-size: 2.5rem;
         margin-bottom: 20px;
-        box-shadow: 0 12px 30px rgba(220, 38, 38, 0.3);
+        box-shadow: 0 12px 30px rgba(45, 106, 159, 0.3);
         transition: transform 0.4s;
     }
 
@@ -309,7 +315,7 @@ else $saludo = "Buenas noches";
     }
 
     .ad-btn-primary {
-        background: linear-gradient(135deg, #7f1d1d, #dc2626);
+        background: linear-gradient(135deg, #1a3a5c, #2d6a9f);
         color: #fff;
         border: none;
         padding: 14px 40px;
@@ -320,14 +326,16 @@ else $saludo = "Buenas noches";
         display: inline-flex;
         align-items: center;
         gap: 10px;
-        box-shadow: 0 8px 24px rgba(220, 38, 38, 0.3);
+        box-shadow: 0 8px 24px rgba(45, 106, 159, 0.3);
+        text-decoration: none;
     }
 
     .ad-btn-primary:hover {
         transform: translateY(-3px);
-        box-shadow: 0 14px 35px rgba(220, 38, 38, 0.45);
+        box-shadow: 0 14px 35px rgba(45, 106, 159, 0.45);
         color: #fff;
     }
+    
     .ad-quick-card {
         background: #fff;
         border-radius: 16px;
@@ -401,6 +409,7 @@ else $saludo = "Buenas noches";
             </div>
         </div>
     </div>
+    
     <div class="row g-3 mb-3">
         <div class="col-xl-3 col-md-6 stagger-1">
             <div class="ad-kpi" style="--kpi-color: #2563eb;">
@@ -439,8 +448,8 @@ else $saludo = "Buenas noches";
         </div>
 
         <div class="col-xl-3 col-md-6 stagger-4">
-            <div class="ad-kpi" style="--kpi-color: #dc2626;">
-                <div class="ad-kpi-icon" style="background: linear-gradient(135deg, #7f1d1d, #dc2626);">
+            <div class="ad-kpi" style="--kpi-color: #2d6a9f;"> <!-- Cambiado de rojo a azul -->
+                <div class="ad-kpi-icon" style="background: linear-gradient(135deg, #1a3a5c, #2d6a9f);">
                     <i class="fas fa-user-md"></i>
                 </div>
                 <div class="ad-kpi-info">
@@ -450,6 +459,7 @@ else $saludo = "Buenas noches";
             </div>
         </div>
     </div>
+    
     <div class="row g-3 mb-4">
         <div class="col-md-6 stagger-1">
             <div class="ad-card-color" style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);">
@@ -473,6 +483,7 @@ else $saludo = "Buenas noches";
             </div>
         </div>
     </div>
+    
     <div class="row mb-4">
         <div class="col-12">
             <div class="ad-action-card">

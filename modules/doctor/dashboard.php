@@ -180,6 +180,7 @@ if ($stmt_ultimas) {
 ?>
 
 <style>
+    /* ELIMINAR ESPACIO EN BLANCO SUPERIOR */
     html, body {
         height: auto !important;
         min-height: 100% !important;
@@ -236,7 +237,7 @@ if ($stmt_ultimas) {
     }
 
     .table tbody tr:hover {
-        background: rgba(78, 115, 223, 0.04);
+        background: rgba(45, 106, 159, 0.04); /* Hover azul */
         transform: scale(1.001);
     }
 
@@ -250,7 +251,14 @@ if ($stmt_ultimas) {
         padding-bottom: 14px;
     }
 
-    .bg-primary-subtle { background: #d1ecf1 !important; color: #0c5460 !important; }
+    /* PALETA AZUL LOGIN */
+    .bg-primary-subtle { background: #e0f2fe !important; color: #1a3a5c !important; }
+    .text-primary { color: #2d6a9f !important; }
+    .btn-primary { background-color: #2d6a9f !important; border-color: #2d6a9f !important; }
+    .btn-outline-primary { color: #2d6a9f !important; border-color: #2d6a9f !important; }
+    .btn-outline-primary:hover { background-color: #2d6a9f !important; color: #fff !important; }
+    .btn-info { background-color: #0ea5e9 !important; border-color: #0ea5e9 !important; color: #fff !important; }
+
     .bg-warning-subtle { background: #fff3cd !important; color: #856404 !important; }
     .bg-success-subtle { background: #d4edda !important; color: #155724 !important; }
     .bg-danger-subtle  { background: #f8d7da !important; color: #721c24 !important; }
@@ -481,21 +489,21 @@ if ($stmt_ultimas) {
         <div class="col-md-4">
             <div class="card border-0 shadow-sm rounded-4 h-100 stat-card">
                 <div class="card-body d-flex align-items-center">
-                    <div class="rounded-circle bg-primary bg-opacity-10 p-3 me-3">
-                        <i class="fas fa-prescription text-primary fa-2x"></i>
+                    <div class="rounded-circle p-3 me-3" style="background-color: rgba(45, 106, 159, 0.1);">
+                        <i class="fas fa-prescription fa-2x" style="color: #2d6a9f;"></i>
                     </div>
                     <div>
                         <h5 class="fw-bold mb-0 display-6"><?php echo $total_recetas; ?></h5>
                         <small class="text-muted">Total de recetas</small>
                     </div>
-                    <div class="ms-auto text-primary opacity-25">
+                    <div class="ms-auto opacity-25" style="color: #2d6a9f;">
                         <i class="fas fa-prescription fa-3x"></i>
                     </div>
                 </div>
                 <div class="card-footer bg-transparent border-0 pt-0">
                     <div class="progress" style="height: 4px;">
-                        <div class="progress-bar bg-primary" role="progressbar"
-                             style="width: <?php echo min($total_recetas * 10, 100); ?>%;"></div>
+                        <div class="progress-bar" role="progressbar"
+                             style="width: <?php echo min($total_recetas * 10, 100); ?>%; background-color: #2d6a9f;"></div>
                     </div>
                 </div>
             </div>
@@ -553,7 +561,7 @@ if ($stmt_ultimas) {
             <div class="card border-0 shadow-lg rounded-4 glass-card">
                 <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-between align-items-center flex-wrap">
                     <h5 class="fw-bold mb-0">
-                        <i class="fas fa-prescription text-primary me-2"></i>
+                        <i class="fas fa-prescription me-2" style="color: #2d6a9f;"></i>
                         Mis Últimas Recetas
                         <span class="badge bg-primary-subtle text-primary rounded-pill ms-2" style="font-size: 0.75rem;">
                             <?php echo $total_registros; ?> total

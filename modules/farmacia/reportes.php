@@ -1,5 +1,17 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) session_start();
+// Configuración estricta de sesión para Vercel
+if (session_status() === PHP_SESSION_NONE) {
+    session_save_path('/tmp'); // Clave para Vercel
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'secure' => true,
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
+    session_start();
+}
+
 require_once '../../config/database.php';
 if (!isset($_SESSION['usuario_id']) || $_SESSION['tipo_usuario'] != 'farmacia') {
     header("Location: /login.php");
@@ -95,21 +107,24 @@ while ($row = $ventas_mensuales->fetch_assoc()) {
 ?>
 
 <style>
-    :root {
-        --rep-primary: #7c3aed;
-        --rep-primary-dark: #4c1d95;
-    }
+    /* ELIMINAR ESPACIO EN BLANCO SUPERIOR */
     .main-content { padding-top: 0 !important; background: #f4f6f9; }
     .container-fluid.px-4 { margin-top: -15px; max-width: 1400px; margin-left: auto; margin-right: auto; }
 
+    /* PALETA AZUL DEL LOGIN */
+    :root {
+        --rep-primary: #2d6a9f;
+        --rep-primary-dark: #1a3a5c;
+    }
+
     .rep-hero {
-        background: linear-gradient(135deg, #1e1b4b 0%, #4c1d95 50%, #7c3aed 100%);
+        background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 50%, #4fa3d1 100%);
         border-radius: 24px;
         padding: 32px 36px;
         color: #fff;
         position: relative;
         overflow: hidden;
-        box-shadow: 0 20px 50px rgba(76, 29, 149, 0.3);
+        box-shadow: 0 20px 50px rgba(45, 106, 159, 0.3);
         margin-bottom: 30px;
     }
     .rep-hero::before {
@@ -218,7 +233,7 @@ while ($row = $ventas_mensuales->fetch_assoc()) {
     .glass-card .card-header h6 i {
         width: 32px; height: 32px; border-radius: 10px;
         display: flex; align-items: center; justify-content: center;
-        background: rgba(124, 58, 237, 0.1); color: var(--rep-primary);
+        background: rgba(45, 106, 159, 0.1); color: var(--rep-primary);
         font-size: 0.9rem;
     }
 
@@ -293,6 +308,7 @@ while ($row = $ventas_mensuales->fetch_assoc()) {
         </div>
     </div>
 
+    <!-- TARJETAS DE ALERTA (Colores de advertencia intactos) -->
     <div class="row g-4 mb-4">
         <div class="col-lg-4 col-md-6">
             <div class="kpi-alert-card" data-bs-toggle="modal" data-bs-target="#modalPorVencer" style="--kpi-color: #f59e0b;">
@@ -346,7 +362,7 @@ while ($row = $ventas_mensuales->fetch_assoc()) {
                            value="<?php echo htmlspecialchars($fecha_fin); ?>">
                 </div>
                 <div class="col-md-4">
-                    <button type="submit" class="btn btn-sm w-100 text-white fw-bold" style="background: linear-gradient(135deg,#4c1d95,#7c3aed); border-radius: 10px; padding: 8px;">
+                    <button type="submit" class="btn btn-sm w-100 text-white fw-bold" style="background: linear-gradient(135deg, #1a3a5c, #2d6a9f); border-radius: 10px; padding: 8px;">
                         <i class="fas fa-filter me-2"></i> Filtrar Resultados
                     </button>
                 </div>
@@ -398,6 +414,7 @@ while ($row = $ventas_mensuales->fetch_assoc()) {
     </div>
 </div>
 
+<!-- MODAL 1: POR VENCER -->
 <div class="modal fade modal-premium" id="modalPorVencer" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
@@ -441,6 +458,7 @@ while ($row = $ventas_mensuales->fetch_assoc()) {
     </div>
 </div>
 
+<!-- MODAL 2: STOCK BAJO -->
 <div class="modal fade modal-premium" id="modalStockBajo" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
@@ -493,7 +511,9 @@ while ($row = $ventas_mensuales->fetch_assoc()) {
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-    const PALETA = ['#7c3aed','#a78bfa','#3b82f6','#10b981','#f59e0b','#ef4444','#06b6d4','#8b5cf6','#ec4899','#22c55e'];
+    // Paleta de colores actualizada a azules
+    const PALETA = ['#2d6a9f','#4fa3d1','#3b82f6','#10b981','#f59e0b','#ef4444','#06b6d4','#1a3a5c','#ec4899','#22c55e'];
+    
     const sinDatos = (id) => {
         const c = document.getElementById(id);
         if (c) c.parentElement.innerHTML =
@@ -529,7 +549,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 labels: <?php echo json_encode($estados_labels); ?>,
                 datasets: [{
                     data: estadosData,
-                    backgroundColor: ['#10b981','#f59e0b','#ef4444','#3b82f6','#7c3aed'],
+                    backgroundColor: ['#10b981','#f59e0b','#ef4444','#3b82f6','#2d6a9f'],
                     borderWidth: 0
                 }]
             },
@@ -550,7 +570,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 datasets: [{
                     label: 'Recetas',
                     data: docData,
-                    backgroundColor: '#3b82f6',
+                    backgroundColor: '#2d6a9f',
                     borderRadius: 8
                 }]
             },
@@ -571,10 +591,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 datasets: [{
                     label: 'Recetas',
                     data: mesData,
-                    borderColor: '#7c3aed',
-                    backgroundColor: 'rgba(124,58,237,0.1)',
+                    borderColor: '#2d6a9f',
+                    backgroundColor: 'rgba(45,106,159,0.1)',
                     fill: true, tension: 0.4,
-                    pointBackgroundColor: '#7c3aed', pointRadius: 5, pointHoverRadius: 7
+                    pointBackgroundColor: '#2d6a9f', pointRadius: 5, pointHoverRadius: 7
                 }]
             },
             options: {

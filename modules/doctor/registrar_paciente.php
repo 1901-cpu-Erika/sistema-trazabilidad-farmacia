@@ -13,6 +13,9 @@ if ($_SESSION['tipo_usuario'] != 'doctor') {
     exit();
 }
 
+// Capturamos el ID del doctor
+$doctor_id = $_SESSION['usuario_id'];
+
 $mensaje = '';
 $tipo_mensaje = '';
 $paciente_registrado = null;
@@ -48,6 +51,9 @@ foreach ($enfermedades_default as $enf) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // CORRECCIÓN: Inicializar errores al principio para que no se borren
+    $errores = [];
+    
     $nombre = $_POST['nombre'];
     $apellido = $_POST['apellido'];
     $fecha_nacimiento = $_POST['fecha_nacimiento'];
@@ -105,7 +111,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     }
 
-    $errores = [];
     $edad = null;
 
     if (!empty($fecha_nacimiento)) {
@@ -146,18 +151,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
             $edad = (int)$edad;
 
+            // ==========================================
+            // CORRECCIÓN: Se agregó la columna doctor_id
+            // ==========================================
             $sql = "INSERT INTO pacientes 
                         (nombre, apellido, fecha_nacimiento, edad, sexo, telefono, tiene_whatsapp, cedula, 
                          responsable_nombre, responsable_telefono, responsable_cedula, 
                          contacto_alternativo_nombre, contacto_alternativo_telefono, contacto_alternativo_whatsapp,
-                         nombre_tutor, telefono_tutor) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                         nombre_tutor, telefono_tutor, doctor_id) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             $stmt = $conn->prepare($sql);
             if (!$stmt) throw new Exception("Error en la preparación: " . $conn->error);
 
+            // CORRECCIÓN: Se agregó la "i" y el $doctor_id al final
             $stmt->bind_param(
-                "sssisissssssssss", 
+                "sssisissssssssssi", 
                 $nombre,
                 $apellido,
                 $fecha_nacimiento,
@@ -173,7 +182,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $contacto_telefono,
                 $contacto_whatsapp,
                 $nombre_tutor,
-                $telefono_tutor
+                $telefono_tutor,
+                $doctor_id
             );
 
             if (!$stmt->execute()) throw new Exception("Error al insertar paciente: " . $stmt->error);
@@ -393,7 +403,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 </div>
                 <div>
                     <h5 class="alert-heading fw-bold mb-1">¡Paciente registrado con éxito!</h5>
-                    <p class="mb-2">El paciente ya está guardado en la base de datos.</p>
+                    <p class="mb-2">El paciente ya está guardado en la base de datos y vinculado a tu cuenta.</p>
                     <div class="mt-2">
                         <a href="crear_receta.php?paciente_id=<?php echo $paciente_registrado; ?>" class="btn btn-success btn-sm rounded-pill px-3">
                             <i class="fas fa-file-prescription"></i> Crear Receta AHORA

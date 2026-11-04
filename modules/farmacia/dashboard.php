@@ -1,6 +1,6 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) {
-    session_save_path('/tmp');
+    session_save_path('/tmp'); // Clave para Vercel
     session_set_cookie_params([
         'lifetime' => 0,
         'path' => '/',
@@ -68,9 +68,10 @@ $stock_bajo_lista = $conn->query($sql_stock);
 ?>
 
 <style>
-
+    /* ELIMINAR ESPACIO EN BLANCO SUPERIOR */
     .main-content { padding-top: 0 !important; }
-    .dashboard-container { padding: 0 20px 20px 20px; margin-top: -10px; }
+    .dashboard-container { padding: 0 20px 20px 20px; margin-top: -15px; }
+    
     .stat-card {
         border: none;
         border-radius: 16px;
@@ -86,10 +87,11 @@ $stock_bajo_lista = $conn->query($sql_stock);
     .stat-card.clickable { cursor: pointer; }
     .stat-card.clickable:hover { filter: brightness(1.05); }
 
-    .card-purple { background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%); }
-    .card-teal   { background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%); }
-    .card-amber  { background: linear-gradient(135deg, #b45309 0%, #f59e0b 100%); }
-    .card-red    { background: linear-gradient(135deg, #9f1239 0%, #ef4444 100%); }
+    /* PALETA AZUL LOGIN */
+    .card-blue       { background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 100%); }
+    .card-light-blue { background: linear-gradient(135deg, #2d6a9f 0%, #4fa3d1 100%); }
+    .card-amber      { background: linear-gradient(135deg, #b45309 0%, #f59e0b 100%); }
+    .card-red        { background: linear-gradient(135deg, #9f1239 0%, #ef4444 100%); }
 
     .stat-icon {
         position: absolute;
@@ -99,6 +101,7 @@ $stock_bajo_lista = $conn->query($sql_stock);
         opacity: 0.15;
     }
     .card-content { position: relative; z-index: 1; }
+    
     .custom-card {
         border: none;
         border-radius: 16px;
@@ -132,20 +135,19 @@ $stock_bajo_lista = $conn->query($sql_stock);
     }
     .table tbody tr { transition: all 0.2s; }
     .table tbody tr:hover {
-        background: linear-gradient(90deg, rgba(124,58,237,0.03), transparent);
+        background: linear-gradient(90deg, rgba(45,106,159,0.04), transparent); /* Hover azul */
         transform: scale(1.002);
     }
 
-    .btn-gradient-purple { background: linear-gradient(135deg, #4c1d95, #7c3aed); color: #fff; border: none; box-shadow: 0 4px 12px rgba(124,58,237,0.3); }
-    .btn-gradient-purple:hover { color: #fff; transform: translateY(-2px); box-shadow: 0 6px 18px rgba(124,58,237,0.4); }
-    .btn-gradient-amber { background: linear-gradient(135deg, #b45309, #f59e0b); color: #fff; border: none; box-shadow: 0 4px 12px rgba(245,158,11,0.3); }
-    .btn-gradient-amber:hover { color: #fff; transform: translateY(-2px); box-shadow: 0 6px 18px rgba(245,158,11,0.4); }
+    .btn-gradient-blue { background: linear-gradient(135deg, #1a3a5c, #2d6a9f); color: #fff; border: none; box-shadow: 0 4px 12px rgba(45,106,159,0.3); }
+    .btn-gradient-blue:hover { color: #fff; transform: translateY(-2px); box-shadow: 0 6px 18px rgba(45,106,159,0.4); }
+    
     .badge-soft-warning   { background: #fff3cd; color: #856404; padding: 6px 12px; border-radius: 8px; font-weight: 600; }
     .badge-soft-success   { background: #d4edda; color: #155724; padding: 6px 12px; border-radius: 8px; font-weight: 600; }
     .badge-soft-secondary { background: #e2e3e5; color: #383d41; padding: 6px 12px; border-radius: 8px; font-weight: 600; }
     .badge-soft-info      { background: #cff4fc; color: #055160; padding: 6px 12px; border-radius: 8px; font-weight: 600; }
 
-    /* PAGINACIÓN */
+    /* PAGINACIÓN AZUL */
     .pagination { gap: 6px; }
     .page-item .page-link {
         border-radius: 50%;
@@ -155,19 +157,19 @@ $stock_bajo_lista = $conn->query($sql_stock);
         align-items: center;
         justify-content: center;
         border: 2px solid #e9ecef;
-        color: #4c1d95;
+        color: #1a3a5c;
         font-weight: 700;
         transition: all 0.2s;
     }
     .page-item.active .page-link {
-        background: linear-gradient(135deg, #4c1d95, #7c3aed);
+        background: linear-gradient(135deg, #1a3a5c, #2d6a9f);
         color: white;
         border-color: transparent;
-        box-shadow: 0 4px 10px rgba(124,58,237,0.3);
+        box-shadow: 0 4px 10px rgba(45,106,159,0.3);
     }
     .page-item .page-link:hover {
         background: #f8f9fa;
-        border-color: #7c3aed;
+        border-color: #2d6a9f;
     }
 
     .fade-in { animation: fadeUp 0.6s ease forwards; }
@@ -175,8 +177,9 @@ $stock_bajo_lista = $conn->query($sql_stock);
 </style>
 
 <div class="container-fluid px-4 mt-3 fade-in">
+    <!-- BANNER PRINCIPAL (AZUL) -->
     <div class="card border-0 shadow-lg rounded-4 overflow-hidden position-relative mb-4"
-         style="background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%);">
+         style="background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 100%);">
         <i class="fas fa-pills position-absolute" style="font-size: 150px; right: 20px; top: -30px; opacity: 0.1; color: white;"></i>
         <i class="fas fa-hand-holding-medical position-absolute" style="font-size: 100px; right: 180px; bottom: -30px; opacity: 0.1; color: white;"></i>
 
@@ -197,10 +200,12 @@ $stock_bajo_lista = $conn->query($sql_stock);
             </div>
         </div>
     </div>
+
     <div class="dashboard-container">
         <div class="row g-4 mb-4">
+            <!-- KPI 1: RECETAS (AZUL) -->
             <div class="col-xl-3 col-md-6">
-                <div class="card stat-card card-purple h-100">
+                <div class="card stat-card card-blue h-100">
                     <div class="card-body">
                         <div class="card-content">
                             <div class="d-flex justify-content-between align-items-start">
@@ -217,8 +222,9 @@ $stock_bajo_lista = $conn->query($sql_stock);
                     </div>
                 </div>
             </div>
+            <!-- KPI 2: ENTREGAS (CELESTE) -->
             <div class="col-xl-3 col-md-6">
-                <div class="card stat-card card-teal h-100">
+                <div class="card stat-card card-light-blue h-100">
                     <div class="card-body">
                         <div class="card-content">
                             <div class="d-flex justify-content-between align-items-start">
@@ -235,6 +241,7 @@ $stock_bajo_lista = $conn->query($sql_stock);
                     </div>
                 </div>
             </div>
+            <!-- KPI 3: PENDIENTES (NARANJA) -->
             <div class="col-xl-3 col-md-6">
                 <div class="card stat-card card-amber h-100">
                     <div class="card-body">
@@ -253,6 +260,7 @@ $stock_bajo_lista = $conn->query($sql_stock);
                     </div>
                 </div>
             </div>
+            <!-- KPI 4: STOCK BAJO (ROJO) -->
             <div class="col-xl-3 col-md-6">
                 <div class="card stat-card card-red h-100 clickable" data-bs-toggle="modal" data-bs-target="#modalStockBajo">
                     <div class="card-body">
@@ -275,12 +283,13 @@ $stock_bajo_lista = $conn->query($sql_stock);
                 </div>
             </div>
         </div>
+
         <div class="row g-4 mb-4">
             <div class="col-xl-12 col-lg-12">
                 <div class="card custom-card h-100">
                     <div class="card-header custom-card-header">
-                        <span><i class="fas fa-file-prescription text-primary me-2"></i>Recetas Recientes</span>
-                        <a href="recetas_recibidas.php" class="btn btn-gradient-purple btn-sm rounded-pill px-4">Ver todas</a>
+                        <span><i class="fas fa-file-prescription me-2" style="color: #2d6a9f;"></i>Recetas Recientes</span>
+                        <a href="recetas_recibidas.php" class="btn btn-gradient-blue btn-sm rounded-pill px-4">Ver todas</a>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
@@ -394,6 +403,8 @@ $stock_bajo_lista = $conn->query($sql_stock);
         </div>
     </div>
 </div>
+
+<!-- MODAL STOCK BAJO (Mantiene color de advertencia rojo) -->
 <div class="modal fade" id="modalStockBajo" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
@@ -433,10 +444,12 @@ $stock_bajo_lista = $conn->query($sql_stock);
         </div>
     </div>
 </div>
+
+<!-- MODAL DETALLE RECETA (Azul) -->
 <div class="modal fade" id="modalDetalleReceta" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
-            <div class="modal-header border-0" style="background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%); padding: 20px 25px;">
+            <div class="modal-header border-0" style="background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 100%); padding: 20px 25px;">
                 <h5 class="modal-title text-white fw-bold"><i class="fas fa-file-prescription me-2"></i> Detalle de la Receta</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>

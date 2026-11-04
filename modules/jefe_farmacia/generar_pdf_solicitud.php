@@ -1,7 +1,14 @@
 <?php
-// 1. Arreglo de Sesión para Vercel
+// 1. Configuración estricta de sesión para Vercel
 if (session_status() === PHP_SESSION_NONE) {
     session_save_path('/tmp');
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'secure' => true,
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
     session_start();
 }
 
@@ -30,7 +37,7 @@ $fecha           = date('d/m/Y');
     <title>Formato 6 - Solicitud de Medicamentos</title>
     <style>
         /* ESTILOS DE PANTALLA */
-        body { font-family: Arial, sans-serif; background: #f1f5f9; margin: 0; padding: 20px; }
+        body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; }
         .container { max-width: 900px; margin: 0 auto; background: white; padding: 40px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         
         /* ESTILOS DEL PDF (Impresión) */
@@ -41,16 +48,17 @@ $fecha           = date('d/m/Y');
             @page { margin: 20px; size: A4 portrait; }
         }
 
-        .header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #065f46; padding-bottom: 15px; }
-        .header h2 { margin: 2px 0; font-size: 14px; color: #065f46; }
+        /* PALETA AZUL LOGIN */
+        .header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #1a3a5c; padding-bottom: 15px; }
+        .header h2 { margin: 2px 0; font-size: 14px; color: #1a3a5c; }
         .header h3 { margin: 2px 0; font-size: 13px; font-weight: normal; }
-        .header h4 { margin: 8px 0 0; font-size: 12px; color: #065f46; }
+        .header h4 { margin: 8px 0 0; font-size: 12px; color: #1a3a5c; }
         
         .info { margin-bottom: 15px; }
         .info p { margin: 3px 0; font-size: 12px; }
         
         table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
-        th { background: #065f46; color: white; padding: 10px 8px; text-align: left; font-size: 11px; }
+        th { background: #1a3a5c; color: white; padding: 10px 8px; text-align: left; font-size: 11px; }
         td { padding: 8px; border-bottom: 1px solid #e5e7eb; font-size: 11px; }
         tr:nth-child(even) { background: #f8fafc; }
         
@@ -61,21 +69,22 @@ $fecha           = date('d/m/Y');
         
         .footer { text-align: center; font-size: 9px; color: #64748b; margin-top: 30px; }
 
-        /* BOTÓN FLOTANTE */
+        /* BOTÓN FLOTANTE AZUL */
         .btn-print {
-            position: fixed; bottom: 30px; right: 30px; background: #065f46; color: white;
+            position: fixed; bottom: 30px; right: 30px; 
+            background: linear-gradient(135deg, #1a3a5c, #2d6a9f); color: white;
             padding: 15px 25px; border-radius: 50px; border: none; font-size: 16px; font-weight: bold;
-            cursor: pointer; box-shadow: 0 4px 15px rgba(6, 95, 70, 0.4); transition: all 0.3s;
+            cursor: pointer; box-shadow: 0 4px 15px rgba(45, 106, 159, 0.4); transition: all 0.3s;
             display: flex; align-items: center; gap: 10px;
         }
-        .btn-print:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(6, 95, 70, 0.6); }
+        .btn-print:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(45, 106, 159, 0.6); }
     </style>
 </head>
 <body>
 
 <!-- BOTÓN PARA GUARDAR COMO PDF -->
 <button class="btn-print no-print" onclick="window.print()">
-    🖨️ Guardar como PDF
+    <i class="fas fa-print"></i> Guardar como PDF
 </button>
 
 <div class="container">

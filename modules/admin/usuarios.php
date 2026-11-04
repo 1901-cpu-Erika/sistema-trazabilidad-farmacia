@@ -387,336 +387,341 @@ require_once '../../includes/sidebar.php';
 ?>
 
 <style>
-:root {
-    --us-primary: #dc2626;
-    --us-primary-dark: #7f1d1d;
-}
+    /* ELIMINAR ESPACIO EN BLANCO SUPERIOR */
+    .main-content { padding-top: 0 !important; }
+    .container-fluid.px-4 { margin-top: -15px; }
 
-.us-hero {
-    background: linear-gradient(135deg,#7f1d1d 0%,#dc2626 55%,#ef4444 100%);
-    border-radius: 24px;
-    padding: 32px 36px;
-    color: #fff;
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 20px 50px rgba(220,38,38,.25);
-    margin-bottom: 24px;
-}
+    /* PALETA AZUL LOGIN */
+    :root {
+        --us-primary: #2d6a9f;
+        --us-primary-dark: #1a3a5c;
+    }
 
-.us-hero::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image: radial-gradient(circle,rgba(255,255,255,.12) 1px,transparent 1px);
-    background-size: 20px 20px;
-}
-
-.us-hero::after {
-    content: '\f0c0';
-    font-family: "Font Awesome 6 Free";
-    font-weight: 900;
-    position: absolute;
-    right: -20px;
-    bottom: -40px;
-    font-size: 200px;
-    opacity: .08;
-}
-
-.us-hero-content {
-    position: relative;
-    z-index: 1;
-}
-
-.us-hero-icon {
-    width: 68px;
-    height: 68px;
-    background: rgba(255,255,255,.2);
-    border-radius: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.7rem;
-    flex-shrink: 0;
-}
-
-.us-hero h2 {
-    font-size: 1.7rem;
-    font-weight: 700;
-    margin: 0 0 4px;
-}
-
-.us-hero p {
-    margin: 0;
-    opacity: .9;
-    font-size: .92rem;
-}
-
-.us-table-card {
-    background: #fff;
-    border-radius: 20px;
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 6px 22px rgba(15,23,42,.05);
-    overflow: hidden;
-}
-
-.us-table-header {
-    padding: 20px 24px;
-    background: linear-gradient(180deg,#fafbfc,#f8fafc);
-    border-bottom: 1px solid #f1f5f9;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
-}
-
-.us-table-header h6 {
-    margin: 0;
-    font-weight: 700;
-    color: #0f172a;
-    font-size: .95rem;
-}
-
-.us-count {
-    background: var(--us-primary);
-    color: #fff;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: .75rem;
-    font-weight: 700;
-}
-
-.us-search {
-    position: relative;
-    max-width: 280px;
-}
-
-.us-search input {
-    border-radius: 12px;
-    border: 1px solid #e2e8f0;
-    padding: 9px 14px 9px 38px;
-    font-size: .85rem;
-    width: 100%;
-    background: #f8fafc;
-}
-
-.us-search::before {
-    content: '\f002';
-    font-family: "Font Awesome 6 Free";
-    font-weight: 900;
-    position: absolute;
-    left: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #94a3b8;
-}
-
-.us-table {
-    margin: 0;
-    font-size: .87rem;
-}
-
-.us-table thead th {
-    background: #f8fafc;
-    font-size: .7rem;
-    text-transform: uppercase;
-    letter-spacing: .8px;
-    font-weight: 700;
-    color: #64748b;
-    padding: 14px 18px;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.us-table tbody td {
-    padding: 14px 18px;
-    vertical-align: middle;
-    border-bottom: 1px solid #f1f5f9;
-}
-
-.us-table tbody tr:hover {
-    background: rgba(220,38,38,.03);
-}
-
-.us-avatar {
-    width: 38px;
-    height: 38px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    font-weight: 700;
-    font-size: .85rem;
-    flex-shrink: 0;
-}
-
-.us-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: .73rem;
-    font-weight: 700;
-}
-
-.us-badge-admin {
-    background: #1e293b;
-    color: #fff;
-}
-
-.us-badge-jefe {
-    background: #dcfce7;
-    color: #166534;
-}
-
-.us-badge-farmacia {
-    background: #ede9fe;
-    color: #6d28d9;
-}
-
-.us-badge-doctor {
-    background: #dbeafe;
-    color: #1e40af;
-}
-
-.us-badge-turno {
-    background: #fef3c7;
-    color: #92400e;
-}
-
-.us-badge-activo {
-    background: #dcfce7;
-    color: #166534;
-}
-
-.us-badge-inactivo {
-    background: #e2e8f0;
-    color: #475569;
-}
-
-.us-badge-esp {
-    background: #d1fae5;
-    color: #065f46;
-}
-
-.us-action-btn {
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
-    border: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: .85rem;
-    cursor: pointer;
-    transition: all .2s;
-}
-
-.us-btn-edit {
-    background: #fef3c7;
-    color: #b45309;
-}
-
-.us-btn-edit:hover {
-    background: #fcd34d;
-}
-
-.us-btn-delete {
-    background: #fee2e2;
-    color: #b91c1c;
-}
-
-.us-btn-delete:hover {
-    background: #fecaca;
-}
-
-.us-alert {
-    border: none;
-    border-radius: 14px;
-    padding: 14px 18px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 500;
-    margin-bottom: 20px;
-}
-
-.us-alert-success {
-    background: #d1fae5;
-    color: #065f46;
-}
-
-.us-alert-danger {
-    background: #fee2e2;
-    color: #991b1b;
-}
-
-.us-modal-label {
-    font-size: .82rem;
-    font-weight: 600;
-    color: #475569;
-    margin-bottom: 6px;
-}
-
-#modalUsuario .form-control,
-#modalUsuario .form-select {
-    border: 1px solid #e2e8f0;
-    padding: 10px 14px;
-    font-size: .9rem;
-    background: #fafbfc;
-}
-
-#modalUsuario .form-control:focus,
-#modalUsuario .form-select:focus {
-    border-color: var(--us-primary);
-    box-shadow: 0 0 0 4px rgba(220,38,38,.12);
-    background: #fff;
-}
-
-.us-toggle {
-    width: 48px;
-    height: 26px;
-    border: none;
-    border-radius: 30px;
-    padding: 3px;
-    background: #9ca3af;
-    display: inline-flex;
-    align-items: center;
-    justify-content: flex-start;
-    cursor: pointer;
-    transition: background .25s ease;
-    flex-shrink: 0;
-}
-
-.us-toggle.is-active {
-    background: #16a34a;
-    justify-content: flex-end;
-}
-
-.us-toggle-knob {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: #fff;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, .2);
-    transition: transform .25s ease;
-}
-
-.us-toggle:focus-visible {
-    outline: 3px solid rgba(220, 38, 38, .3);
-    outline-offset: 3px;
-}
-
-@media(max-width:768px) {
     .us-hero {
-        padding: 22px;
+        background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 55%, #4fa3d1 100%);
+        border-radius: 24px;
+        padding: 32px 36px;
+        color: #fff;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 20px 50px rgba(45, 106, 159, 0.25);
+        margin-bottom: 24px;
+    }
+
+    .us-hero::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image: radial-gradient(circle,rgba(255,255,255,.12) 1px,transparent 1px);
+        background-size: 20px 20px;
+    }
+
+    .us-hero::after {
+        content: '\f0c0';
+        font-family: "Font Awesome 6 Free";
+        font-weight: 900;
+        position: absolute;
+        right: -20px;
+        bottom: -40px;
+        font-size: 200px;
+        opacity: .08;
+    }
+
+    .us-hero-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .us-hero-icon {
+        width: 68px;
+        height: 68px;
+        background: rgba(255,255,255,.2);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.7rem;
+        flex-shrink: 0;
     }
 
     .us-hero h2 {
-        font-size: 1.3rem;
+        font-size: 1.7rem;
+        font-weight: 700;
+        margin: 0 0 4px;
     }
-}
+
+    .us-hero p {
+        margin: 0;
+        opacity: .9;
+        font-size: .92rem;
+    }
+
+    .us-table-card {
+        background: #fff;
+        border-radius: 20px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 6px 22px rgba(15,23,42,.05);
+        overflow: hidden;
+    }
+
+    .us-table-header {
+        padding: 20px 24px;
+        background: linear-gradient(180deg,#fafbfc,#f8fafc);
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .us-table-header h6 {
+        margin: 0;
+        font-weight: 700;
+        color: #0f172a;
+        font-size: .95rem;
+    }
+
+    .us-count {
+        background: var(--us-primary);
+        color: #fff;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: .75rem;
+        font-weight: 700;
+    }
+
+    .us-search {
+        position: relative;
+        max-width: 280px;
+    }
+
+    .us-search input {
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        padding: 9px 14px 9px 38px;
+        font-size: .85rem;
+        width: 100%;
+        background: #f8fafc;
+    }
+
+    .us-search::before {
+        content: '\f002';
+        font-family: "Font Awesome 6 Free";
+        font-weight: 900;
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+    }
+
+    .us-table {
+        margin: 0;
+        font-size: .87rem;
+    }
+
+    .us-table thead th {
+        background: #f8fafc;
+        font-size: .7rem;
+        text-transform: uppercase;
+        letter-spacing: .8px;
+        font-weight: 700;
+        color: #64748b;
+        padding: 14px 18px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .us-table tbody td {
+        padding: 14px 18px;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .us-table tbody tr:hover {
+        background: rgba(45, 106, 159, .03); /* Hover azul */
+    }
+
+    .us-avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-weight: 700;
+        font-size: .85rem;
+        flex-shrink: 0;
+    }
+
+    .us-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: .73rem;
+        font-weight: 700;
+    }
+
+    .us-badge-admin {
+        background: #1e293b;
+        color: #fff;
+    }
+
+    .us-badge-jefe {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .us-badge-farmacia {
+        background: #ede9fe;
+        color: #6d28d9;
+    }
+
+    .us-badge-doctor {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .us-badge-turno {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .us-badge-activo {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .us-badge-inactivo {
+        background: #e2e8f0;
+        color: #475569;
+    }
+
+    .us-badge-esp {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .us-action-btn {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .85rem;
+        cursor: pointer;
+        transition: all .2s;
+    }
+
+    .us-btn-edit {
+        background: #fef3c7;
+        color: #b45309;
+    }
+
+    .us-btn-edit:hover {
+        background: #fcd34d;
+    }
+
+    .us-btn-delete {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .us-btn-delete:hover {
+        background: #fecaca;
+    }
+
+    .us-alert {
+        border: none;
+        border-radius: 14px;
+        padding: 14px 18px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 500;
+        margin-bottom: 20px;
+    }
+
+    .us-alert-success {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .us-alert-danger {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .us-modal-label {
+        font-size: .82rem;
+        font-weight: 600;
+        color: #475569;
+        margin-bottom: 6px;
+    }
+
+    #modalUsuario .form-control,
+    #modalUsuario .form-select {
+        border: 1px solid #e2e8f0;
+        padding: 10px 14px;
+        font-size: .9rem;
+        background: #fafbfc;
+    }
+
+    #modalUsuario .form-control:focus,
+    #modalUsuario .form-select:focus {
+        border-color: var(--us-primary);
+        box-shadow: 0 0 0 4px rgba(45,106,159,.12);
+        background: #fff;
+    }
+
+    .us-toggle {
+        width: 48px;
+        height: 26px;
+        border: none;
+        border-radius: 30px;
+        padding: 3px;
+        background: #9ca3af;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-start;
+        cursor: pointer;
+        transition: background .25s ease;
+        flex-shrink: 0;
+    }
+
+    .us-toggle.is-active {
+        background: #16a34a;
+        justify-content: flex-end;
+    }
+
+    .us-toggle-knob {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, .2);
+        transition: transform .25s ease;
+    }
+
+    .us-toggle:focus-visible {
+        outline: 3px solid rgba(45, 106, 159, .3);
+        outline-offset: 3px;
+    }
+
+    @media(max-width:768px) {
+        .us-hero {
+            padding: 22px;
+        }
+
+        .us-hero h2 {
+            font-size: 1.3rem;
+        }
+    }
 </style>
 
 <div class="container-fluid px-4 py-3">
@@ -752,7 +757,8 @@ require_once '../../includes/sidebar.php';
     <div class="d-flex justify-content-end mb-3">
         <button
             type="button"
-            class="btn btn-danger rounded-pill px-4 py-3 fw-semibold"
+            class="btn rounded-pill px-4 py-3 fw-semibold text-white"
+            style="background: linear-gradient(135deg, #1a3a5c, #2d6a9f); box-shadow: 0 4px 15px rgba(45,106,159,0.3);"
             onclick="abrirRegistro()">
             <i class="fas fa-user-plus me-2"></i>Registrar usuario
         </button>
@@ -761,7 +767,7 @@ require_once '../../includes/sidebar.php';
     <div class="us-table-card">
         <div class="us-table-header">
             <h6>
-                <i class="fas fa-list me-2 text-danger"></i>
+                <i class="fas fa-list me-2" style="color: #2d6a9f;"></i>
                 Usuarios Registrados
             </h6>
 
@@ -977,7 +983,7 @@ require_once '../../includes/sidebar.php';
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
         <div class="modal-content border-0 rounded-4 shadow">
 
-            <div class="modal-header bg-danger text-white">
+            <div class="modal-header text-white" style="background: linear-gradient(135deg, #1a3a5c, #2d6a9f);">
                 <h5 class="modal-title fw-bold" id="tituloModalUsuario">
                     <i class="fas fa-user-plus me-2"></i>Registrar usuario
                 </h5>
@@ -1191,7 +1197,8 @@ require_once '../../includes/sidebar.php';
                         <button
                             type="submit"
                             name="guardar_usuario"
-                            class="btn btn-danger rounded-pill px-4">
+                            class="btn rounded-pill px-4 text-white"
+                            style="background: linear-gradient(135deg, #1a3a5c, #2d6a9f);">
 
                             <i class="fas fa-save me-2"></i>
 

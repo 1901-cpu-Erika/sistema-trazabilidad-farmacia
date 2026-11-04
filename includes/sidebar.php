@@ -7,9 +7,7 @@ if (session_status() === PHP_SESSION_NONE) {
 $tipo_usuario   = $_SESSION['tipo_usuario'] ?? 'doctor';
 $nombre_usuario = $_SESSION['usuario_nombre'] ?? 'Usuario';
 
-// ==========================================
-// ARREGLO DE URL PARA VERCEL Y XAMPP
-// ==========================================
+
 $protocolo = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
 $host = $_SERVER['HTTP_HOST'];
 
@@ -219,7 +217,7 @@ $nombre_rol = match($tipo_usuario) {
 
     <div class="sidebar-brand">
         <div class="sidebar-brand-icon">
-            <img src="<?php echo $base_url; ?>assets/imagen/FarmaTrace.jpeg" alt="FarmaTrace Logo">
+            <img src="<?php echo $base_url; ?>assets/imagen/logo.png" alt="FarmaTrace Logo">
         </div>
         <div class="sidebar-brand-text">
             <span class="sidebar-brand-title">FarmaTrace</span>

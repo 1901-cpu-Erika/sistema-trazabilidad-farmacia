@@ -20,10 +20,12 @@ $totalPacientes = 0;
 $totalConRecetas = 0;
 $totalMenores = 0;
 
-$result = $conn->query("SELECT COUNT(*) AS total FROM pacientes");
-if ($result && $result->num_rows > 0) {
-    $totalPacientes = $result->fetch_assoc()['total'] ?? 0;
-}
+// CORRECCIÓN: Contar solo pacientes de este doctor
+$stmt = $conn->prepare("SELECT COUNT(*) AS total FROM pacientes WHERE doctor_id = ?");
+$stmt->bind_param("i", $doctor_id);
+$stmt->execute();
+$totalPacientes = $stmt->get_result()->fetch_assoc()['total'] ?? 0;
+$stmt->close();
 
 $stmt = $conn->prepare("SELECT COUNT(DISTINCT p.id) AS total 
                         FROM pacientes p 
@@ -34,10 +36,12 @@ $stmt->execute();
 $totalConRecetas = $stmt->get_result()->fetch_assoc()['total'] ?? 0;
 $stmt->close();
 
-$result = $conn->query("SELECT COUNT(*) AS total FROM pacientes WHERE edad < 18");
-if ($result && $result->num_rows > 0) {
-    $totalMenores = $result->fetch_assoc()['total'] ?? 0;
-}
+// CORRECCIÓN: Contar solo menores de este doctor
+$stmt = $conn->prepare("SELECT COUNT(*) AS total FROM pacientes WHERE doctor_id = ? AND edad < 18");
+$stmt->bind_param("i", $doctor_id);
+$stmt->execute();
+$totalMenores = $stmt->get_result()->fetch_assoc()['total'] ?? 0;
+$stmt->close();
 
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 $term = "%$search%";
@@ -47,12 +51,14 @@ $pagina = isset($_GET['pagina']) ? max(1, intval($_GET['pagina'])) : 1;
 $offset = ($pagina - 1) * $por_pagina;
 
 $total = 0;
+// CORRECCIÓN: Contar solo resultados de búsqueda de este doctor
 $stmtCount = $conn->prepare("
     SELECT COUNT(*) as total 
     FROM pacientes 
-    WHERE nombre LIKE ? OR apellido LIKE ? OR cedula LIKE ? OR telefono LIKE ?
+    WHERE (nombre LIKE ? OR apellido LIKE ? OR cedula LIKE ? OR telefono LIKE ?)
+    AND doctor_id = ?
 ");
-$stmtCount->bind_param("ssss", $term, $term, $term, $term);
+$stmtCount->bind_param("ssssi", $term, $term, $term, $term, $doctor_id);
 $stmtCount->execute();
 $total = $stmtCount->get_result()->fetch_assoc()['total'] ?? 0;
 $stmtCount->close();
@@ -178,7 +184,7 @@ $total_paginas = ceil($total / $por_pagina);
                                         <i class="fas fa-search me-2"></i> Mis Pacientes
                                     </h2>
                                     <p class="opacity-90 mb-0">
-                                        <i class="fas fa-users me-2"></i> Todos los pacientes del sistema
+                                        <i class="fas fa-users me-2"></i> Pacientes registrados por ti
                                     </p>
                                 </div>
                             </div>
@@ -287,17 +293,20 @@ $total_paginas = ceil($total / $por_pagina);
                     </thead>
                     <tbody>
                         <?php
+                        // CORRECCIÓN: Traer solo pacientes de este doctor
                         $query = "
                             SELECT p.*,
                                    (SELECT COUNT(*) FROM recetas r WHERE r.paciente_id = p.id AND r.doctor_id = ?) AS cantidad_recetas
                             FROM pacientes p
-                            WHERE p.nombre LIKE ? OR p.apellido LIKE ? OR p.cedula LIKE ? OR p.telefono LIKE ?
+                            WHERE (p.nombre LIKE ? OR p.apellido LIKE ? OR p.cedula LIKE ? OR p.telefono LIKE ?)
+                            AND p.doctor_id = ?
                             ORDER BY p.nombre ASC
                             LIMIT ? OFFSET ?
                         ";
                         $stmt = $conn->prepare($query);
                         if ($stmt) {
-                            $stmt->bind_param("issssii", $doctor_id, $term, $term, $term, $term, $por_pagina, $offset);
+                            // issssiii (8 variables)
+                            $stmt->bind_param("issssiii", $doctor_id, $term, $term, $term, $term, $doctor_id, $por_pagina, $offset);
                             $stmt->execute();
                             $result = $stmt->get_result();
 

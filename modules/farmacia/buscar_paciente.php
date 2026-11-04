@@ -1,17 +1,24 @@
 <?php
 
+// Configuración estricta de sesión para Vercel
 if (session_status() === PHP_SESSION_NONE) {
+    session_save_path('/tmp'); // Clave para Vercel
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'secure' => true,
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
     session_start();
 }
 
 require_once '../../config/database.php';
 
-
 if (!isset($_SESSION['usuario_id']) || $_SESSION['tipo_usuario'] != 'farmacia') {
     header("Location: /login.php");
     exit();
 }
-
 
 $titulo_pagina = "Buscar Paciente";
 require_once '../../includes/header.php';
@@ -19,13 +26,18 @@ require_once '../../includes/sidebar.php';
 
 $farmacia_id = $_SESSION['usuario_id'];
 
-
 $totalPacientes = 0;
 $totalConRecetas = 0;
 $totalMenores = 0;
 
-
-$result = $conn->query("SELECT COUNT(*) AS total FROM pacientes");
+// ==========================================
+// CORRECCIÓN 1: Solo contar pacientes que tengan recetas
+// ==========================================
+$result = $conn->query("
+    SELECT COUNT(*) AS total 
+    FROM pacientes p 
+    WHERE EXISTS (SELECT 1 FROM recetas r WHERE r.paciente_id = p.id)
+");
 if ($result && $result->num_rows > 0) {
     $totalPacientes = $result->fetch_assoc()['total'] ?? 0;
 }
@@ -37,8 +49,15 @@ if ($result && $result->num_rows > 0) {
     $totalConRecetas = $result->fetch_assoc()['total'] ?? 0;
 }
 
-
-$result = $conn->query("SELECT COUNT(*) AS total FROM pacientes WHERE edad < 18");
+// ==========================================
+// CORRECCIÓN 2: Solo contar menores que tengan recetas
+// ==========================================
+$result = $conn->query("
+    SELECT COUNT(*) AS total 
+    FROM pacientes p 
+    WHERE p.edad < 18 
+    AND EXISTS (SELECT 1 FROM recetas r WHERE r.paciente_id = p.id)
+");
 if ($result && $result->num_rows > 0) {
     $totalMenores = $result->fetch_assoc()['total'] ?? 0;
 }
@@ -51,11 +70,14 @@ $por_pagina = 6;
 $pagina_actual = isset($_GET['pagina']) ? max(1, intval($_GET['pagina'])) : 1;
 $offset = ($pagina_actual - 1) * $por_pagina;
 
-// Contar total de registros para la paginación
+// ==========================================
+// CORRECCIÓN 3: Contar solo pacientes con recetas
+// ==========================================
 $stmtCount = $conn->prepare("
     SELECT COUNT(*) as total 
-    FROM pacientes 
-    WHERE nombre LIKE ? OR apellido LIKE ? OR cedula LIKE ? OR telefono LIKE ?
+    FROM pacientes p
+    WHERE (p.nombre LIKE ? OR p.apellido LIKE ? OR p.cedula LIKE ? OR p.telefono LIKE ?)
+    AND EXISTS (SELECT 1 FROM recetas r WHERE r.paciente_id = p.id)
 ");
 $total_registros = 0;
 if ($stmtCount) {
@@ -73,7 +95,7 @@ $total_paginas = ceil($total_registros / $por_pagina);
 <style>
     /* SUBIR EL CONTENIDO */
     .main-content { padding-top: 0 !important; }
-    .container-fluid.px-4 { margin-top: -10px; }
+    .container-fluid.px-4 { margin-top: -15px; }
 
     .avatar-circle {
         width: 42px; height: 42px; border-radius: 50%;
@@ -82,7 +104,7 @@ $total_paginas = ceil($total_registros / $por_pagina);
         flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
     .table tbody tr { transition: all 0.15s ease; border-bottom: 1px solid rgba(0,0,0,0.03); }
-    .table tbody tr:hover { background: rgba(124, 58, 237, 0.04); }
+    .table tbody tr:hover { background: rgba(45, 106, 159, 0.04); } /* Hover azul */
     .fade-in { animation: fadeUp 0.6s ease forwards; }
     @keyframes fadeUp {
         from { opacity: 0; transform: translateY(20px); }
@@ -91,7 +113,7 @@ $total_paginas = ceil($total_registros / $por_pagina);
     .bg-warning-subtle { background: #fff3cd !important; color: #856404 !important; }
     .bg-success-subtle { background: #d4edda !important; color: #155724 !important; }
 
-    /* PAGINACIÓN */
+    /* PAGINACIÓN AZUL */
     .pagination { gap: 6px; }
     .page-item .page-link {
         border-radius: 50%;
@@ -101,27 +123,28 @@ $total_paginas = ceil($total_registros / $por_pagina);
         align-items: center;
         justify-content: center;
         border: 2px solid #e9ecef;
-        color: #4c1d95;
+        color: #1a3a5c;
         font-weight: 700;
         transition: all 0.2s;
     }
     .page-item.active .page-link {
-        background: linear-gradient(135deg, #4c1d95, #7c3aed);
+        background: linear-gradient(135deg, #1a3a5c, #2d6a9f);
         color: white;
         border-color: transparent;
-        box-shadow: 0 4px 10px rgba(124,58,237,0.3);
+        box-shadow: 0 4px 10px rgba(45,106,159,0.3);
     }
     .page-item .page-link:hover {
         background: #f8f9fa;
-        border-color: #7c3aed;
+        border-color: #2d6a9f;
     }
 </style>
 
 <div class="container-fluid px-4 fade-in">
 
+    <!-- BANNER AZUL -->
     <div class="row g-4 mb-4">
         <div class="col-12">
-            <div class="card border-0 shadow-lg rounded-4 overflow-hidden" style="background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 50%, #a78bfa 100%);">
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden" style="background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 50%, #4fa3d1 100%);">
                 <div class="card-body p-4 text-white">
                     <div class="row align-items-center">
                         <div class="col-md-8">
@@ -146,16 +169,17 @@ $total_paginas = ceil($total_registros / $por_pagina);
     </div>
 
     
+    <!-- TARJETAS KPI -->
     <div class="row g-3 mb-4">
         <div class="col-md-4 col-sm-6">
-            <div class="card border-0 shadow-sm rounded-4 h-100" style="border-top: 5px solid #7c3aed;">
+            <div class="card border-0 shadow-sm rounded-4 h-100" style="border-top: 5px solid #2d6a9f;">
                 <div class="card-body d-flex align-items-center">
-                    <div class="rounded-circle p-3 me-3" style="background: rgba(124, 58, 237, 0.12);">
-                        <i class="fas fa-users fa-2x" style="color: #7c3aed;"></i>
+                    <div class="rounded-circle p-3 me-3" style="background: rgba(45, 106, 159, 0.12);">
+                        <i class="fas fa-users fa-2x" style="color: #2d6a9f;"></i>
                     </div>
                     <div>
-                        <h5 class="fw-bold mb-0" style="color: #4c1d95; font-size: 2rem;"><?php echo $totalPacientes; ?></h5>
-                        <small class="text-muted">Pacientes totales</small>
+                        <h5 class="fw-bold mb-0" style="color: #1a3a5c; font-size: 2rem;"><?php echo $totalPacientes; ?></h5>
+                        <small class="text-muted">Pacientes con recetas</small>
                     </div>
                 </div>
             </div>
@@ -167,7 +191,7 @@ $total_paginas = ceil($total_registros / $por_pagina);
                         <i class="fas fa-prescription fa-2x" style="color: #2A9DBF;"></i>
                     </div>
                     <div>
-                        <h5 class="fw-bold mb-0" style="color: #4c1d95; font-size: 2rem;"><?php echo $totalConRecetas; ?></h5>
+                        <h5 class="fw-bold mb-0" style="color: #1a3a5c; font-size: 2rem;"><?php echo $totalConRecetas; ?></h5>
                         <small class="text-muted">Con recetas aprobadas</small>
                     </div>
                 </div>
@@ -180,8 +204,8 @@ $total_paginas = ceil($total_registros / $por_pagina);
                         <i class="fas fa-child fa-2x" style="color: #F5A623;"></i>
                     </div>
                     <div>
-                        <h5 class="fw-bold mb-0" style="color: #4c1d95; font-size: 2rem;"><?php echo $totalMenores; ?></h5>
-                        <small class="text-muted">Menores de edad</small>
+                        <h5 class="fw-bold mb-0" style="color: #1a3a5c; font-size: 2rem;"><?php echo $totalMenores; ?></h5>
+                        <small class="text-muted">Menores con recetas</small>
                     </div>
                 </div>
             </div>
@@ -189,21 +213,22 @@ $total_paginas = ceil($total_registros / $por_pagina);
     </div>
 
     
-    <div class="card border-0 shadow-lg rounded-4" style="background: rgba(255,255,255,0.95); border: 2px solid #7c3aed;">
+    <!-- CONTENEDOR PRINCIPAL -->
+    <div class="card border-0 shadow-lg rounded-4" style="background: rgba(255,255,255,0.95); border: 2px solid #2d6a9f !important;">
         <div class="card-body p-4">
 
             <form method="GET" class="mb-4">
                 <div class="input-group input-group-lg">
-                    <span class="input-group-text bg-white border-end-0 rounded-start-pill" style="border-color: #7c3aed;">
-                        <i class="fas fa-search" style="color: #7c3aed;"></i>
+                    <span class="input-group-text bg-white border-end-0 rounded-start-pill" style="border-color: #2d6a9f;">
+                        <i class="fas fa-search" style="color: #2d6a9f;"></i>
                     </span>
                     <input type="text" name="search" class="form-control border-start-0"
-                           style="border-color: #7c3aed;"
+                           style="border-color: #2d6a9f;"
                            placeholder="Buscar por nombre, apellido, cédula o teléfono..."
                            value="<?php echo htmlspecialchars($search); ?>"
                            id="searchInput">
                     <button class="btn rounded-end-pill px-4" type="submit"
-                            style="background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%); color: #fff; border: none; font-weight: 600;">
+                            style="background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 100%); color: #fff; border: none; font-weight: 600;">
                         <i class="fas fa-search me-1"></i> Buscar
                     </button>
                 </div>
@@ -211,7 +236,7 @@ $total_paginas = ceil($total_registros / $por_pagina);
 
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
-                    <span class="badge rounded-pill px-4 py-2" style="background: #7c3aed; color: #fff; font-size: 0.9rem;">
+                    <span class="badge rounded-pill px-4 py-2" style="background: #2d6a9f; color: #fff; font-size: 0.9rem;">
                         <i class="fas fa-database me-1"></i>
                         <?php echo $total_registros . ' paciente' . ($total_registros != 1 ? 's' : '') . ' encontrado' . ($total_registros != 1 ? 's' : ''); ?>
                     </span>
@@ -225,24 +250,28 @@ $total_paginas = ceil($total_registros / $por_pagina);
 
             <div class="table-responsive">
                 <table class="table table-hover align-middle">
-                    <thead style="background: #F3E8FF;">
+                    <thead style="background: #e0f2fe;">
                         <tr>
-                            <th class="ps-3" style="color: #4c1d95; font-weight: 700;">ID</th>
-                            <th style="color: #4c1d95; font-weight: 700;">Paciente</th>
-                            <th style="color: #4c1d95; font-weight: 700;">Edad</th>
-                            <th style="color: #4c1d95; font-weight: 700;">Contacto</th>
-                            <th style="color: #4c1d95; font-weight: 700;">Recetas</th>
-                            <th class="text-end pe-3" style="color: #4c1d95; font-weight: 700;">Acciones</th>
+                            <th class="ps-3" style="color: #1a3a5c; font-weight: 700;">ID</th>
+                            <th style="color: #1a3a5c; font-weight: 700;">Paciente</th>
+                            <th style="color: #1a3a5c; font-weight: 700;">Edad</th>
+                            <th style="color: #1a3a5c; font-weight: 700;">Contacto</th>
+                            <th style="color: #1a3a5c; font-weight: 700;">Recetas</th>
+                            <th class="text-end pe-3" style="color: #1a3a5c; font-weight: 700;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php
+                        // ==========================================
+                        // CORRECCIÓN 4: Mostrar solo pacientes con recetas
+                        // ==========================================
                         $query = "
                             SELECT p.*,
                                    (SELECT COUNT(*) FROM recetas r WHERE r.paciente_id = p.id AND r.estado = 'aprobada') AS recetas_aprobadas,
                                    (SELECT COUNT(*) FROM recetas r WHERE r.paciente_id = p.id) AS total_recetas
                             FROM pacientes p
-                            WHERE p.nombre LIKE ? OR p.apellido LIKE ? OR p.cedula LIKE ? OR p.telefono LIKE ?
+                            WHERE (p.nombre LIKE ? OR p.apellido LIKE ? OR p.cedula LIKE ? OR p.telefono LIKE ?)
+                            AND EXISTS (SELECT 1 FROM recetas r WHERE r.paciente_id = p.id)
                             ORDER BY p.nombre ASC
                             LIMIT ? OFFSET ?
                         ";
@@ -262,7 +291,7 @@ $total_paginas = ceil($total_registros / $por_pagina);
                         ?>
                                     <tr>
                                         <td class="ps-3">
-                                            <span class="badge rounded-pill" style="background: #7c3aed; color: #fff;">#<?php echo $paciente_id; ?></span>
+                                            <span class="badge rounded-pill" style="background: #2d6a9f; color: #fff;">#<?php echo $paciente_id; ?></span>
                                         </td>
                                         <td>
                                             <div class="d-flex align-items-center">
@@ -279,7 +308,7 @@ $total_paginas = ceil($total_registros / $por_pagina);
                                             </div>
                                         </td>
                                         <td>
-                                            <span class="fw-bold fs-5" style="color: #4c1d95;"><?php echo $edad; ?></span>
+                                            <span class="fw-bold fs-5" style="color: #1a3a5c;"><?php echo $edad; ?></span>
                                             <small class="text-muted d-block">años</small>
                                         </td>
                                         <td>
@@ -301,17 +330,12 @@ $total_paginas = ceil($total_registros / $por_pagina);
                                                 <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-3 py-2">
                                                     <i class="fas fa-clock me-1"></i> <?php echo $total_rec; ?> pendiente(s)
                                                 </span>
-                                            <?php else: ?>
-                                                <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill px-3 py-2">
-                                                    <i class="fas fa-minus-circle me-1"></i> Sin recetas
-                                                </span>
                                             <?php endif; ?>
                                         </td>
                                         <td class="text-end pe-3">
-                                            <!-- DEJAMOS SOLO EL BOTÓN DE VER RECETAS, MÁS ANCHO Y ESTILIZADO -->
                                             <a href="recetas_recibidas.php?paciente_id=<?php echo $paciente_id; ?>"
                                                class="btn btn-sm rounded-pill px-4 shadow-sm"
-                                               style="background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%); color: #fff; border: none; font-weight: 600;">
+                                               style="background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 100%); color: #fff; border: none; font-weight: 600;">
                                                 <i class="fas fa-prescription me-1"></i> Ver recetas
                                             </a>
                                         </td>
@@ -321,7 +345,7 @@ $total_paginas = ceil($total_registros / $por_pagina);
                             } else {
                                 echo '<tr><td colspan="6" class="text-center py-5">';
                                 echo '<i class="fas fa-search fa-3x text-muted mb-3 d-block"></i>';
-                                echo '<h5 class="text-muted">No se encontraron pacientes</h5>';
+                                echo '<h5 class="text-muted">No se encontraron pacientes con recetas</h5>';
                                 echo '<p class="text-muted small">Intenta con otro término de búsqueda.</p>';
                                 echo '</td></tr>';
                             }

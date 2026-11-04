@@ -96,19 +96,24 @@ while ($row = $res_estados->fetch_assoc()) {
 ?>
 
 <style>
+    /* ELIMINAR ESPACIO EN BLANCO SUPERIOR */
+    .main-content { padding-top: 0 !important; }
+    .container-fluid.px-4 { margin-top: -15px; }
+
+    /* PALETA AZUL DEL LOGIN */
     :root {
-        --rep-primary: #dc2626;
-        --rep-primary-dark: #7f1d1d;
+        --rep-primary: #2d6a9f;
+        --rep-primary-dark: #1a3a5c;
     }
 
     .rep-hero {
-        background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 55%, #ef4444 100%);
+        background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 55%, #4fa3d1 100%);
         border-radius: 24px;
         padding: 32px 36px;
         color: #fff;
         position: relative;
         overflow: hidden;
-        box-shadow: 0 20px 50px rgba(220, 38, 38, 0.25);
+        box-shadow: 0 20px 50px rgba(45, 106, 159, 0.25);
         margin-bottom: 24px;
     }
     .rep-hero::before {
@@ -162,7 +167,7 @@ while ($row = $res_estados->fetch_assoc()) {
         position: absolute;
         top: 0; left: 0;
         width: 4px; height: 100%;
-        background: var(--kpi-color, #dc2626);
+        background: var(--kpi-color, #2d6a9f);
         transition: width 0.35s;
     }
     .rep-kpi:hover { transform: translateY(-5px); box-shadow: 0 14px 32px rgba(15, 23, 42, 0.1); }
@@ -219,8 +224,8 @@ while ($row = $res_estados->fetch_assoc()) {
         display: flex;
         align-items: center;
         justify-content: center;
-        background: #fef2f2;
-        color: #dc2626;
+        background: #e0f2fe; /* Azul claro */
+        color: #1a3a5c;      /* Azul oscuro */
         border-radius: 10px;
         font-size: 0.85rem;
     }
@@ -249,7 +254,7 @@ while ($row = $res_estados->fetch_assoc()) {
         border-bottom: 1px solid #f1f5f9;
     }
     .rep-table tbody tr:hover {
-        background: linear-gradient(90deg, rgba(220,38,38,0.03), transparent);
+        background: linear-gradient(90deg, rgba(45,106,159,0.03), transparent); /* Azul suave */
     }
 
     .rep-avatar {
@@ -281,7 +286,7 @@ while ($row = $res_estados->fetch_assoc()) {
     }
     .rep-bar-fill {
         height: 100%;
-        background: linear-gradient(90deg, #dc2626, #ef4444);
+        background: linear-gradient(90deg, #1a3a5c, #2d6a9f); /* Azul */
         border-radius: 4px;
         transition: width 1s ease;
     }
@@ -325,8 +330,8 @@ while ($row = $res_estados->fetch_assoc()) {
 
     <div class="row g-3 mb-4">
         <div class="col-xl-3 col-md-6 stagger-1">
-            <div class="rep-kpi" style="--kpi-color: #dc2626;">
-                <div class="rep-kpi-icon" style="background: linear-gradient(135deg, #7f1d1d, #dc2626);">
+            <div class="rep-kpi" style="--kpi-color: #2d6a9f;">
+                <div class="rep-kpi-icon" style="background: linear-gradient(135deg, #1a3a5c, #2d6a9f);">
                     <i class="fas fa-users"></i>
                 </div>
                 <div>
@@ -469,7 +474,8 @@ while ($row = $res_estados->fetch_assoc()) {
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-    const PALETA = ['#dc2626','#ef4444','#f87171','#fca5a5','#7c3aed','#3b82f6','#10b981','#f59e0b'];
+    // Paleta actualizada a azules
+    const PALETA = ['#2d6a9f','#4fa3d1','#3b82f6','#10b981','#f59e0b','#7c3aed','#ef4444','#06b6d4'];
 
     const espLabels = <?php echo json_encode($esp_labels); ?>;
     const espData   = <?php echo json_encode($esp_data); ?>;
@@ -518,7 +524,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 labels: rolesLabels,
                 datasets: [{
                     data: rolesData,
-                    backgroundColor: ['#dc2626','#10b981','#3b82f6','#8b5cf6'],
+                    backgroundColor: ['#2d6a9f','#10b981','#3b82f6','#8b5cf6'],
                     borderRadius: 10,
                     barThickness: 50
                 }]
@@ -549,7 +555,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 datasets: [{
                     label: 'Recetas',
                     data: topData,
-                    backgroundColor: 'rgba(220, 38, 38, 0.85)',
+                    backgroundColor: 'rgba(45, 106, 159, 0.85)', /* Azul */
                     borderRadius: 8,
                     barThickness: 28
                 }]
@@ -581,11 +587,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 datasets: [{
                     label: 'Usuarios',
                     data: mesData,
-                    borderColor: '#dc2626',
-                    backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                    borderColor: '#2d6a9f', /* Azul */
+                    backgroundColor: 'rgba(45, 106, 159, 0.1)',
                     fill: true,
                     tension: 0.35,
-                    pointBackgroundColor: '#dc2626',
+                    pointBackgroundColor: '#2d6a9f',
                     pointBorderColor: '#fff',
                     pointBorderWidth: 2,
                     pointRadius: 5

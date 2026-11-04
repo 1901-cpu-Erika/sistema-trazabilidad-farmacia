@@ -1,5 +1,17 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) session_start();
+// Configuración estricta de sesión para Vercel
+if (session_status() === PHP_SESSION_NONE) {
+    session_save_path('/tmp'); // Clave para Vercel
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'secure' => true,
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
+    session_start();
+}
+
 date_default_timezone_set('America/Managua');
 require_once '../../config/database.php';
 
@@ -193,23 +205,26 @@ if (!isset($_GET['receta'])) {
 ?>
 
 <style>
+    /* ELIMINAR ESPACIO EN BLANCO SUPERIOR */
     .main-content { padding-top: 0 !important; }
     .container-fluid.px-4 { margin-top: -15px; }
 
+    /* PALETA AZUL DEL LOGIN */
     :root {
-        --en-primary: #7c3aed;
-        --en-primary-dark: #4c1d95;
-        --en-green: #10b981;
+        --en-primary: #2d6a9f;
+        --en-primary-dark: #1a3a5c;
+        --en-green: #10b981; /* Solo para WhatsApp */
         --en-green-dark: #065f46;
     }
+    
     .en-hero {
-        background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 55%, #a78bfa 100%);
+        background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 55%, #4fa3d1 100%);
         border-radius: 24px;
         padding: 32px 36px;
         color: #fff;
         position: relative;
         overflow: hidden;
-        box-shadow: 0 20px 50px rgba(124, 58, 237, 0.25);
+        box-shadow: 0 20px 50px rgba(45, 106, 159, 0.25);
         margin-bottom: 24px;
     }
     .en-hero::before {
@@ -243,6 +258,7 @@ if (!isset($_GET['receta'])) {
     }
     .en-hero h2 { font-size: 1.7rem; font-weight: 700; margin: 0 0 4px 0; }
     .en-hero p { margin: 0; opacity: 0.9; font-size: 0.92rem; }
+    
     .en-alert {
         border: none; border-radius: 14px;
         padding: 14px 18px;
@@ -253,6 +269,7 @@ if (!isset($_GET['receta'])) {
     }
     .en-alert-success { background: linear-gradient(135deg,#ecfdf5,#d1fae5); color: #065f46; }
     .en-alert-danger  { background: linear-gradient(135deg,#fef2f2,#fee2e2); color: #991b1b; }
+    
     .en-info-card {
         background: #fff;
         border-radius: 18px;
@@ -306,6 +323,7 @@ if (!isset($_GET['receta'])) {
         font-weight: 600;
         text-align: right;
     }
+    
     .en-meds-card {
         background: #fff;
         border-radius: 20px;
@@ -316,8 +334,8 @@ if (!isset($_GET['receta'])) {
     }
     .en-meds-header {
         padding: 18px 24px;
-        background: linear-gradient(135deg, #f3e8ff, #ede9fe);
-        border-bottom: 1px solid #ddd6fe;
+        background: linear-gradient(135deg, #e0f2fe, #f0f9ff);
+        border-bottom: 1px solid #bae6fd;
         display: flex; align-items: center; justify-content: space-between;
     }
     .en-meds-header h6 {
@@ -331,7 +349,7 @@ if (!isset($_GET['receta'])) {
         border-radius: 10px;
         display: flex; align-items: center; justify-content: center;
         font-size: 0.85rem;
-        box-shadow: 0 4px 12px rgba(124,58,237,0.15);
+        box-shadow: 0 4px 12px rgba(45,106,159,0.15);
     }
     .en-meds-count {
         background: var(--en-primary);
@@ -362,7 +380,7 @@ if (!isset($_GET['receta'])) {
         border-bottom: 1px solid #f1f5f9;
     }
     .en-table tbody tr:hover {
-        background: linear-gradient(90deg, rgba(124,58,237,0.03), transparent);
+        background: linear-gradient(90deg, rgba(45,106,159,0.03), transparent);
     }
 
     .en-badge {
@@ -370,10 +388,10 @@ if (!isset($_GET['receta'])) {
         padding: 5px 12px; border-radius: 20px;
         font-size: 0.72rem; font-weight: 700;
     }
-    .en-badge-purple { background: #ede9fe; color: #6d28d9; }
-    .en-badge-green  { background: #dcfce7; color: #166534; }
-    .en-badge-amber  { background: #fef3c7; color: #92400e; }
-    .en-badge-blue   { background: #dbeafe; color: #1e40af; }
+    .en-badge-blue    { background: #e0f2fe; color: #1a3a5c; }
+    .en-badge-green   { background: #dcfce7; color: #166534; }
+    .en-badge-amber   { background: #fef3c7; color: #92400e; }
+
     .en-form-card {
         background: #fff;
         border-radius: 20px;
@@ -384,21 +402,21 @@ if (!isset($_GET['receta'])) {
     }
     .en-form-header {
         padding: 18px 24px;
-        background: linear-gradient(135deg, #ecfdf5, #d1fae5);
-        border-bottom: 1px solid #a7f3d0;
+        background: linear-gradient(135deg, #e0f2fe, #f0f9ff);
+        border-bottom: 1px solid #bae6fd;
     }
     .en-form-header h6 {
-        margin: 0; font-weight: 700; color: var(--en-green-dark);
+        margin: 0; font-weight: 700; color: var(--en-primary-dark);
         font-size: 0.9rem; display: flex; align-items: center; gap: 10px;
     }
     .en-form-header h6 i {
         width: 30px; height: 30px;
         background: #fff;
-        color: var(--en-green);
+        color: var(--en-primary);
         border-radius: 10px;
         display: flex; align-items: center; justify-content: center;
         font-size: 0.85rem;
-        box-shadow: 0 4px 12px rgba(16,185,129,0.15);
+        box-shadow: 0 4px 12px rgba(45,106,159,0.15);
     }
     .en-form-body { padding: 24px; }
     .en-form-body .form-label {
@@ -413,11 +431,12 @@ if (!isset($_GET['receta'])) {
         transition: all 0.2s;
     }
     .en-form-body .form-control:focus {
-        border-color: var(--en-green);
-        box-shadow: 0 0 0 4px rgba(16,185,129,0.12);
+        border-color: var(--en-primary);
+        box-shadow: 0 0 0 4px rgba(45,106,159,0.12);
         background: #fff;
     }
 
+    /* WhatsApp se mantiene verde por branding */
     .en-btn-whatsapp {
         background: linear-gradient(135deg, #047857, #10b981);
         color: #fff; border: none;
@@ -435,8 +454,9 @@ if (!isset($_GET['receta'])) {
         color: #fff;
     }
 
+    /* Botón de confirmar entrega en AZUL */
     .en-btn-deliver {
-        background: linear-gradient(135deg, #065f46, #10b981);
+        background: linear-gradient(135deg, #1a3a5c, #2d6a9f);
         color: #fff; border: none;
         padding: 16px 30px;
         border-radius: 50px;
@@ -444,42 +464,44 @@ if (!isset($_GET['receta'])) {
         transition: all 0.3s;
         display: inline-flex; align-items: center; justify-content: center;
         gap: 10px; width: 100%;
-        box-shadow: 0 10px 26px rgba(16,185,129,0.35);
+        box-shadow: 0 10px 26px rgba(45,106,159,0.35);
     }
     .en-btn-deliver:hover {
         transform: translateY(-3px);
-        box-shadow: 0 14px 34px rgba(16,185,129,0.5);
+        box-shadow: 0 14px 34px rgba(45,106,159,0.5);
         color: #fff;
     }
+    
     .en-check-box {
-        background: linear-gradient(135deg, #ecfdf5, #f0fdf4);
-        border: 2px solid #a7f3d0;
+        background: linear-gradient(135deg, #e0f2fe, #f0f9ff);
+        border: 2px solid #bae6fd;
         border-radius: 14px;
         padding: 16px 20px;
         margin-bottom: 20px;
         transition: all 0.2s;
     }
     .en-check-box:has(input:checked) {
-        border-color: var(--en-green);
-        background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+        border-color: var(--en-primary);
+        background: linear-gradient(135deg, #bae6fd, #7dd3fc);
     }
     .en-check-box .form-check-input {
         width: 20px; height: 20px;
         margin-top: 2px;
-        border: 2px solid var(--en-green);
+        border: 2px solid var(--en-primary);
         cursor: pointer;
     }
     .en-check-box .form-check-input:checked {
-        background-color: var(--en-green);
-        border-color: var(--en-green);
+        background-color: var(--en-primary);
+        border-color: var(--en-primary);
     }
     .en-check-box .form-check-label {
         font-weight: 600;
-        color: #065f46;
+        color: #1a3a5c;
         cursor: pointer;
         padding-left: 8px;
         font-size: 0.9rem;
     }
+    
     .en-list-card {
         background: #fff;
         border-radius: 20px;
@@ -493,7 +515,7 @@ if (!isset($_GET['receta'])) {
         border-bottom: 1px solid #f1f5f9;
         display: flex; justify-content: space-between; align-items: center;
     }
-    .en-list-header h6 { margin: 0; font-weight: 700; color: #0f172a; font-size: 0.95rem; }
+    .en-list-header h6 { margin: 0; font-weight: 700; color: #1a3a5c; font-size: 0.95rem; }
 
     .en-avatar {
         width: 38px; height: 38px;
@@ -505,7 +527,7 @@ if (!isset($_GET['receta'])) {
     }
 
     .en-btn-select {
-        background: linear-gradient(135deg, #6d28d9, #8b5cf6);
+        background: linear-gradient(135deg, #1a3a5c, #2d6a9f);
         color: #fff; border: none;
         padding: 8px 20px;
         border-radius: 50px;
@@ -518,10 +540,11 @@ if (!isset($_GET['receta'])) {
     }
     .en-btn-select:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(124,58,237,0.4);
+        box-shadow: 0 8px 20px rgba(45,106,159,0.4);
         color: #fff;
     }
 
+    /* PAGINACIÓN AZUL */
     .pagination { gap: 6px; }
     .page-item .page-link {
         border-radius: 50%;
@@ -531,19 +554,19 @@ if (!isset($_GET['receta'])) {
         align-items: center;
         justify-content: center;
         border: 2px solid #e9ecef;
-        color: #4c1d95;
+        color: #1a3a5c;
         font-weight: 700;
         transition: all 0.2s;
     }
     .page-item.active .page-link {
-        background: linear-gradient(135deg, #4c1d95, #7c3aed);
+        background: linear-gradient(135deg, #1a3a5c, #2d6a9f);
         color: white;
         border-color: transparent;
-        box-shadow: 0 4px 10px rgba(124,58,237,0.3);
+        box-shadow: 0 4px 10px rgba(45,106,159,0.3);
     }
     .page-item .page-link:hover {
         background: #f8f9fa;
-        border-color: #7c3aed;
+        border-color: #2d6a9f;
     }
 
     .fade-in { animation: fadeUp 0.5s ease forwards; }
@@ -593,7 +616,7 @@ if (!isset($_GET['receta'])) {
                     <div class="col-md-6 stagger-1">
                         <div class="en-info-card">
                             <div class="en-info-header">
-                                <div class="en-info-header-icon" style="background: linear-gradient(135deg, #1e40af, #3b82f6);">
+                                <div class="en-info-header-icon" style="background: linear-gradient(135deg, #1a3a5c, #2d6a9f);">
                                     <i class="fas fa-user"></i>
                                 </div>
                                 <h6>Información del Paciente</h6>
@@ -679,7 +702,7 @@ if (!isset($_GET['receta'])) {
                                     <tr>
                                         <td>
                                             <div class="d-flex align-items-center gap-2">
-                                                <div class="en-avatar" style="background: #7c3aed;">
+                                                <div class="en-avatar" style="background: #2d6a9f;">
                                                     <i class="fas fa-capsules"></i>
                                                 </div>
                                                 <div class="fw-bold text-dark"><?php echo htmlspecialchars($det['medicamento_nombre']); ?></div>
@@ -703,7 +726,7 @@ if (!isset($_GET['receta'])) {
                                         </td>
                                         <td>
                                             <?php if (!empty($det['lote_id'])): ?>
-                                                <span class="en-badge en-badge-purple">
+                                                <span class="en-badge en-badge-blue">
                                                     <i class="fas fa-box"></i>
                                                     Lote #<?php echo $det['lote_id']; ?>
                                                 </span>
@@ -715,11 +738,11 @@ if (!isset($_GET['receta'])) {
                                         </td>
                                         <td>
                                             <?php if (!empty($det['codigo_qr'])): ?>
-                                                <code style="font-size: 0.72rem; color: #7c3aed; font-weight: 600;">
+                                                <code style="font-size: 0.72rem; color: #2d6a9f; font-weight: 600;">
                                                     <?php echo htmlspecialchars(substr($det['codigo_qr'], 0, 15)) . '...'; ?>
                                                 </code>
                                                 <button class="btn btn-sm btn-link p-0 ms-1" onclick="copiarQR('<?php echo $det['codigo_qr']; ?>')">
-                                                    <i class="fas fa-copy" style="color: #7c3aed;"></i>
+                                                    <i class="fas fa-copy" style="color: #2d6a9f;"></i>
                                                 </button>
                                             <?php else: ?>
                                                 <span class="text-muted small">N/A</span>
@@ -870,8 +893,8 @@ if (!isset($_GET['receta'])) {
         </div>
         <div class="en-list-card">
             <div class="en-list-header">
-                <h6><i class="fas fa-list me-2" style="color: #7c3aed;"></i>Recetas Aprobadas Pendientes</h6>
-                <span class="en-badge en-badge-purple">
+                <h6><i class="fas fa-list me-2" style="color: #2d6a9f;"></i>Recetas Aprobadas Pendientes</h6>
+                <span class="en-badge en-badge-blue">
                     <?php echo $total_aprobadas; ?> recetas
                 </span>
             </div>
@@ -915,7 +938,7 @@ if (!isset($_GET['receta'])) {
                                 </td>
                                 <td>
                                     <div class="d-flex align-items-center gap-2">
-                                        <div class="en-avatar" style="background: #6d28d9; font-size: 0.75rem;">
+                                        <div class="en-avatar" style="background: #2d6a9f; font-size: 0.75rem;">
                                             <i class="fas fa-user-md"></i>
                                         </div>
                                         <div class="fw-semibold"><?php echo htmlspecialchars($row['doctor_nombre']); ?></div>
@@ -992,7 +1015,7 @@ function confirmarEntrega(event) {
         title: '¿Confirmar entrega?',
         html: `
             <div style="text-align: center;">
-                <i class="fas fa-hand-holding-medical" style="font-size: 3rem; color: #10b981; margin-bottom: 15px;"></i>
+                <i class="fas fa-hand-holding-medical" style="font-size: 3rem; color: #2d6a9f; margin-bottom: 15px;"></i>
                 <p style="font-size: 1rem; margin-bottom: 10px;">¿Estás seguro de que los medicamentos han sido entregados correctamente al paciente?</p>
                 <p style="font-size: 0.85rem; color: #991b1b; background: #fef2f2; padding: 10px; border-radius: 10px; margin: 0;">
                     <strong>Importante:</strong> El stock será descontado automáticamente del inventario.
@@ -1003,7 +1026,7 @@ function confirmarEntrega(event) {
         showCancelButton: true,
         confirmButtonText: '<i class="fas fa-check"></i> Sí, confirmar entrega',
         cancelButtonText: 'Cancelar',
-        confirmButtonColor: '#10b981',
+        confirmButtonColor: '#2d6a9f', /* Botón azul */
         cancelButtonColor: '#94a3b8',
         reverseButtons: true
     }).then((result) => {

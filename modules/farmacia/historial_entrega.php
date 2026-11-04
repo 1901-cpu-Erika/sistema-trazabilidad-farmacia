@@ -1,5 +1,17 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) session_start();
+// Configuración estricta de sesión para Vercel
+if (session_status() === PHP_SESSION_NONE) {
+    session_save_path('/tmp'); // Clave para Vercel
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'secure' => true,
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
+    session_start();
+}
+
 date_default_timezone_set('America/Managua');
 require_once '../../config/database.php';
 
@@ -43,22 +55,24 @@ $entregas_mes = $conn->query("SELECT COUNT(*) as t FROM entregas WHERE MONTH(fec
 ?>
 
 <style>
+    /* ELIMINAR ESPACIO EN BLANCO SUPERIOR */
     .main-content { padding-top: 0 !important; }
     .container-fluid.px-4 { margin-top: -15px; }
 
+    /* PALETA AZUL LOGIN */
     :root {
-        --hi-primary: #8b5cf6;
-        --hi-primary-dark: #6d28d9;
+        --hi-primary: #2d6a9f;
+        --hi-primary-dark: #1a3a5c;
     }
 
     .hi-hero {
-        background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 55%, #a78bfa 100%);
+        background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 55%, #4fa3d1 100%);
         border-radius: 24px;
         padding: 32px 36px;
         color: #fff;
         position: relative;
         overflow: hidden;
-        box-shadow: 0 20px 50px rgba(124, 58, 237, 0.25);
+        box-shadow: 0 20px 50px rgba(45, 106, 159, 0.25);
         margin-bottom: 24px;
     }
     .hi-hero::before {
@@ -112,7 +126,7 @@ $entregas_mes = $conn->query("SELECT COUNT(*) as t FROM entregas WHERE MONTH(fec
         position: absolute;
         top: 0; left: 0;
         width: 4px; height: 100%;
-        background: var(--kpi-color, #8b5cf6);
+        background: var(--kpi-color, #2d6a9f);
         transition: width 0.35s;
     }
     .hi-kpi:hover { transform: translateY(-5px); box-shadow: 0 14px 32px rgba(15, 23, 42, 0.1); }
@@ -156,7 +170,7 @@ $entregas_mes = $conn->query("SELECT COUNT(*) as t FROM entregas WHERE MONTH(fec
         display: flex; justify-content: space-between; align-items: center;
         flex-wrap: wrap; gap: 12px;
     }
-    .hi-table-header h6 { margin: 0; font-weight: 700; color: #0f172a; font-size: 0.95rem; }
+    .hi-table-header h6 { margin: 0; font-weight: 700; color: #1a3a5c; font-size: 0.95rem; }
     .hi-count {
         background: var(--hi-primary); color: #fff;
         padding: 6px 14px; border-radius: 20px;
@@ -172,7 +186,7 @@ $entregas_mes = $conn->query("SELECT COUNT(*) as t FROM entregas WHERE MONTH(fec
     }
     .hi-search input:focus {
         border-color: var(--hi-primary);
-        box-shadow: 0 0 0 4px rgba(139,92,246,0.12);
+        box-shadow: 0 0 0 4px rgba(45,106,159,0.12);
         background: #fff; outline: none;
     }
     .hi-search::before {
@@ -200,7 +214,7 @@ $entregas_mes = $conn->query("SELECT COUNT(*) as t FROM entregas WHERE MONTH(fec
     }
     .hi-table tbody tr { transition: all 0.18s; }
     .hi-table tbody tr:hover {
-        background: linear-gradient(90deg, rgba(139,92,246,0.03), transparent);
+        background: linear-gradient(90deg, rgba(45,106,159,0.03), transparent);
     }
 
     .hi-avatar {
@@ -217,7 +231,7 @@ $entregas_mes = $conn->query("SELECT COUNT(*) as t FROM entregas WHERE MONTH(fec
         padding: 5px 12px; border-radius: 20px;
         font-size: 0.73rem; font-weight: 700;
     }
-    .hi-badge-purple { background: #ede9fe; color: #6d28d9; }
+    .hi-badge-blue { background: #e0f2fe; color: #1a3a5c; }
 
     .hi-date {
         display: flex;
@@ -274,7 +288,7 @@ $entregas_mes = $conn->query("SELECT COUNT(*) as t FROM entregas WHERE MONTH(fec
     }
 
     .hi-btn-primary {
-        background: linear-gradient(135deg, #6d28d9, #8b5cf6);
+        background: linear-gradient(135deg, #1a3a5c, #2d6a9f);
         color: #fff;
         border: none;
         padding: 11px 26px;
@@ -285,15 +299,16 @@ $entregas_mes = $conn->query("SELECT COUNT(*) as t FROM entregas WHERE MONTH(fec
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        box-shadow: 0 6px 16px rgba(139,92,246,0.3);
+        box-shadow: 0 6px 16px rgba(45,106,159,0.3);
         text-decoration: none;
     }
     .hi-btn-primary:hover {
         transform: translateY(-2px);
-        box-shadow: 0 10px 24px rgba(139,92,246,0.45);
+        box-shadow: 0 10px 24px rgba(45,106,159,0.45);
         color: #fff;
     }
 
+    /* PAGINACIÓN AZUL */
     .pagination { gap: 6px; }
     .page-item .page-link {
         border-radius: 50%;
@@ -303,19 +318,19 @@ $entregas_mes = $conn->query("SELECT COUNT(*) as t FROM entregas WHERE MONTH(fec
         align-items: center;
         justify-content: center;
         border: 2px solid #e9ecef;
-        color: #6d28d9;
+        color: #1a3a5c;
         font-weight: 700;
         transition: all 0.2s;
     }
     .page-item.active .page-link {
-        background: linear-gradient(135deg, #4c1d95, #7c3aed);
+        background: linear-gradient(135deg, #1a3a5c, #2d6a9f);
         color: white;
         border-color: transparent;
-        box-shadow: 0 4px 10px rgba(124,58,237,0.3);
+        box-shadow: 0 4px 10px rgba(45,106,159,0.3);
     }
     .page-item .page-link:hover {
         background: #f8f9fa;
-        border-color: #7c3aed;
+        border-color: #2d6a9f;
     }
 
     .fade-in { animation: fadeUp 0.5s ease forwards; }
@@ -354,8 +369,8 @@ $entregas_mes = $conn->query("SELECT COUNT(*) as t FROM entregas WHERE MONTH(fec
     </div>
     <div class="row g-3 mb-4">
         <div class="col-lg-4 col-md-6 stagger-1">
-            <div class="hi-kpi" style="--kpi-color: #8b5cf6;">
-                <div class="hi-kpi-icon" style="background: linear-gradient(135deg, #6d28d9, #8b5cf6);">
+            <div class="hi-kpi" style="--kpi-color: #2d6a9f;">
+                <div class="hi-kpi-icon" style="background: linear-gradient(135deg, #1a3a5c, #2d6a9f);">
                     <i class="fas fa-truck"></i>
                 </div>
                 <div>
@@ -392,7 +407,7 @@ $entregas_mes = $conn->query("SELECT COUNT(*) as t FROM entregas WHERE MONTH(fec
     </div>
     <div class="hi-table-card stagger-4">
         <div class="hi-table-header">
-            <h6><i class="fas fa-list me-2" style="color: #8b5cf6;"></i>Registro de Entregas</h6>
+            <h6><i class="fas fa-list me-2" style="color: #2d6a9f;"></i>Registro de Entregas</h6>
             <div class="d-flex align-items-center gap-3 flex-wrap">
                 <div class="hi-search">
                     <input type="text" id="buscar" placeholder="Buscar paciente, doctor...">
@@ -440,7 +455,7 @@ $entregas_mes = $conn->query("SELECT COUNT(*) as t FROM entregas WHERE MONTH(fec
                             </td>
                             <td>
                                 <div class="d-flex align-items-center gap-2">
-                                    <div class="hi-avatar" style="background: linear-gradient(135deg, #065f46, #10b981); font-size: 0.75rem;">
+                                    <div class="hi-avatar" style="background: linear-gradient(135deg, #1a3a5c, #2d6a9f); font-size: 0.75rem;">
                                         <i class="fas fa-user-md"></i>
                                     </div>
                                     <div class="fw-semibold text-dark">
@@ -449,14 +464,14 @@ $entregas_mes = $conn->query("SELECT COUNT(*) as t FROM entregas WHERE MONTH(fec
                                 </div>
                             </td>
                             <td>
-                                <span class="hi-badge hi-badge-purple">
+                                <span class="hi-badge hi-badge-blue">
                                     <i class="fas fa-prescription"></i> #<?php echo $e['receta_id']; ?>
                                 </span>
                             </td>
                             <td>
                                 <div class="hi-date">
                                     <div class="hi-date-day">
-                                        <i class="fas fa-calendar-day me-1" style="color: #8b5cf6;"></i>
+                                        <i class="fas fa-calendar-day me-1" style="color: #2d6a9f;"></i>
                                         <?php echo date('d/m/Y', strtotime($e['fecha_entrega'])); ?>
                                     </div>
                                     <div class="hi-date-time">
@@ -468,7 +483,7 @@ $entregas_mes = $conn->query("SELECT COUNT(*) as t FROM entregas WHERE MONTH(fec
                             <td>
                                 <?php if (!empty($e['observaciones'])): ?>
                                     <span class="hi-obs" title="<?php echo htmlspecialchars($e['observaciones']); ?>">
-                                        <i class="fas fa-comment me-1" style="color: #8b5cf6;"></i>
+                                        <i class="fas fa-comment me-1" style="color: #2d6a9f;"></i>
                                         <?php echo htmlspecialchars($e['observaciones']); ?>
                                     </span>
                                 <?php else: ?>

@@ -24,10 +24,13 @@ $tipo_mensaje = '';
 $paciente_seleccionado = null;
 $error_paciente = false;
 
+// ==========================================
+// CORRECCIÓN 1: Validar que el paciente sea de este doctor
+// ==========================================
 if (isset($_GET['paciente_id']) && !empty($_GET['paciente_id'])) {
     $id_p = intval($_GET['paciente_id']);
-    $stmt_p = $conn->prepare("SELECT id, nombre, apellido FROM pacientes WHERE id = ?");
-    $stmt_p->bind_param("i", $id_p);
+    $stmt_p = $conn->prepare("SELECT id, nombre, apellido FROM pacientes WHERE id = ? AND doctor_id = ?");
+    $stmt_p->bind_param("ii", $id_p, $doctor_id);
     $stmt_p->execute();
     $res_p = $stmt_p->get_result();
 
@@ -35,7 +38,7 @@ if (isset($_GET['paciente_id']) && !empty($_GET['paciente_id'])) {
         $paciente_seleccionado = $res_p->fetch_assoc();
     } else {
         $error_paciente = true;
-        $mensaje = "El paciente seleccionado no existe en el sistema. Por favor, regístrelo primero.";
+        $mensaje = "El paciente seleccionado no existe o no tienes permiso para recetarle.";
         $tipo_mensaje = "danger";
     }
     $stmt_p->close();
@@ -86,14 +89,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['crear_receta']) && !$e
         $mensaje = "Debe añadir al menos un medicamento.";
         $tipo_mensaje = "danger";
     } else {
-        $stmt_check = $conn->prepare("SELECT COUNT(*) AS total FROM pacientes WHERE id = ?");
-        $stmt_check->bind_param("i", $p_id);
+        // ==========================================
+        // CORRECCIÓN 2: Validar al guardar que el paciente sea de este doctor
+        // ==========================================
+        $stmt_check = $conn->prepare("SELECT COUNT(*) AS total FROM pacientes WHERE id = ? AND doctor_id = ?");
+        $stmt_check->bind_param("ii", $p_id, $doctor_id);
         $stmt_check->execute();
         $result_check = $stmt_check->get_result()->fetch_assoc();
         $stmt_check->close();
 
         if ($result_check['total'] == 0) {
-            $mensaje = "❌ El paciente no existe. Por favor, regístrelo primero.";
+            $mensaje = "❌ Acceso denegado. El paciente no existe o no te pertenece.";
             $tipo_mensaje = "danger";
         } else {
             $conn->begin_transaction();
@@ -231,8 +237,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['crear_receta']) && !$e
                                     </thead>
                                     <tbody id="tbodyPacientesModal">
                                         <?php
-                                        $sql_pac = "SELECT id, nombre, apellido, edad, telefono, cedula FROM pacientes ORDER BY nombre ASC";
-                                        $res_pac = $conn->query($sql_pac);
+                                        // ==========================================
+                                        // CORRECCIÓN 3: Solo buscar pacientes de este doctor
+                                        // ==========================================
+                                        $sql_pac = "SELECT id, nombre, apellido, edad, telefono, cedula FROM pacientes WHERE doctor_id = ? ORDER BY nombre ASC";
+                                        $stmt_pac = $conn->prepare($sql_pac);
+                                        $stmt_pac->bind_param("i", $doctor_id);
+                                        $stmt_pac->execute();
+                                        $res_pac = $stmt_pac->get_result();
 
                                         if ($res_pac && $res_pac->num_rows > 0) {
                                             while ($p = $res_pac->fetch_assoc()) {
@@ -271,8 +283,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['crear_receta']) && !$e
                                                 <?php
                                             }
                                         } else {
-                                            echo '<tr><td colspan="4" class="receta-modal-empty">No hay pacientes registrados</td></tr>';
+                                            echo '<tr><td colspan="4" class="receta-modal-empty">No tienes pacientes registrados aún</td></tr>';
                                         }
+                                        $stmt_pac->close();
                                         ?>
                                     </tbody>
                                 </table>
@@ -590,158 +603,162 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['crear_receta']) && !$e
 
 
 <style>
-.receta-container { background: linear-gradient(135deg, #0f172a 0%, #1a2332 100%); min-height: 100vh; padding: 30px; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
-.receta-wrapper { max-width: 900px; margin: 0 auto; }
-.receta-alert { padding: 15px 20px; border-radius: 12px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-.receta-alert-success { background: linear-gradient(135deg, #065f46, #047857); color: #6ee7b7; border: 1px solid #34d399; }
-.receta-alert-danger { background: linear-gradient(135deg, #7f1d1d, #991b1b); color: #fca5a5; border: 1px solid #ef4444; }
-.receta-close { background: none; border: none; color: inherit; font-size: 24px; cursor: pointer; opacity: .7; padding: 0; line-height: 1; }
+    /* =========================================
+       DISEÑO MODO CLARO - PALETA DEL LOGIN
+       ========================================= */
+    .receta-container { background: #f4f6f9; min-height: 100vh; padding: 30px; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    .receta-wrapper { max-width: 900px; margin: 0 auto; }
+    .receta-alert { padding: 15px 20px; border-radius: 12px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .receta-alert-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .receta-alert-danger { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    .receta-close { background: none; border: none; color: inherit; font-size: 24px; cursor: pointer; opacity: .7; padding: 0; line-height: 1; }
 
-.receta-error-card { background: linear-gradient(135deg, #1e293b, #2d3748); border-radius: 20px; padding: 50px 30px; text-align: center; border: 2px solid #ef4444; box-shadow: 0 20px 50px rgba(0,0,0,.4); }
-.receta-error-icon { background: rgba(239,68,68,.15); border-radius: 50%; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 36px; color: #f87171; }
-.receta-error-title { color: #f1f5f9; font-size: 24px; font-weight: 700; margin-bottom: 10px; }
-.receta-error-text { color: #94a3b8; font-size: 16px; margin-bottom: 25px; line-height: 1.8; }
-.receta-error-buttons { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
-.receta-btn-error { color: #fff; padding: 14px 35px; border-radius: 50px; text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; transition: all .3s; border: none; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,.3); font-size: 15px; }
-.receta-btn-error:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(0,0,0,.4); }
-.receta-btn-buscar { background: linear-gradient(135deg, #0B2A4A 0%, #1A6B8A 100%); }
-.receta-btn-registrar { background: linear-gradient(135deg, #7B5A00 0%, #C9A84C 100%); }
+    .receta-error-card { background: #ffffff; border-radius: 20px; padding: 50px 30px; text-align: center; border: 2px solid #e2e8f0; box-shadow: 0 10px 30px rgba(15,23,42,0.05); }
+    .receta-error-icon { background: #fee2e2; border-radius: 50%; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 36px; color: #ef4444; }
+    .receta-error-title { color: #1a3a5c; font-size: 24px; font-weight: 700; margin-bottom: 10px; }
+    .receta-error-text { color: #64748b; font-size: 16px; margin-bottom: 25px; line-height: 1.8; }
+    .receta-error-buttons { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
+    .receta-btn-error { color: #fff; padding: 14px 35px; border-radius: 50px; text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; transition: all .3s; border: none; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.1); font-size: 15px; }
+    .receta-btn-error:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(0,0,0,0.15); }
+    .receta-btn-buscar { background: linear-gradient(135deg, #1a3a5c, #2d6a9f); }
+    .receta-btn-registrar { background: linear-gradient(135deg, #d97706, #f59e0b); }
 
-.receta-modal { background: linear-gradient(135deg, #1e293b, #2d3748); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 20px; overflow: hidden; }
-.receta-modal-header { background: linear-gradient(135deg, #1a365d, #2563eb); color: #fff; border: none; padding: 20px 26px; }
-.receta-modal-header h5 { font-weight: 700; display: flex; align-items: center; margin: 0; }
-.receta-modal-body { padding: 26px; background: #1e293b; }
-.receta-modal-search { position: relative; margin-bottom: 20px; }
-.receta-modal-search i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 15px; }
-.receta-modal-search-input { width: 100%; padding: 12px 16px 12px 44px; border-radius: 12px; border: 2px solid #334155; background: #0f172a; color: #e2e8f0; font-size: 14px; transition: all .3s; }
-.receta-modal-search-input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
-.receta-modal-table-wrapper { max-height: 380px; overflow-y: auto; border-radius: 12px; border: 1px solid #334155; }
-.receta-modal-table { width: 100%; border-collapse: collapse; color: #e2e8f0; font-size: 14px; }
-.receta-modal-table thead { background: #0f172a; position: sticky; top: 0; z-index: 1; }
-.receta-modal-table th { padding: 14px 16px; text-align: left; color: #94a3b8; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; border-bottom: 2px solid #334155; }
-.receta-modal-table td { padding: 12px 16px; border-bottom: 1px solid #1e293b; }
-.receta-modal-table tbody tr:hover { background: rgba(59, 130, 246, 0.05); }
-.receta-modal-paciente { display: flex; align-items: center; gap: 12px; }
-.receta-modal-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 13px; flex-shrink: 0; }
-.receta-modal-nombre { font-weight: 600; color: #f1f5f9; }
-.receta-modal-cedula { font-size: 12px; color: #94a3b8; margin-top: 2px; }
-.receta-modal-edad { color: #60a5fa; font-weight: 600; }
-.receta-modal-tel { color: #94a3b8; }
-.receta-modal-btn-select { background: linear-gradient(135deg, #2563eb, #3b82f6); color: #fff; padding: 8px 18px; border-radius: 50px; text-decoration: none; font-weight: 700; font-size: 12px; display: inline-flex; align-items: center; transition: all .25s; border: none; cursor: pointer; }
-.receta-modal-btn-select:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4); color: #fff; }
-.receta-modal-empty { text-align: center; padding: 40px 20px; color: #64748b; }
+    .receta-modal { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 20px; overflow: hidden; }
+    .receta-modal-header { background: linear-gradient(135deg, #1a3a5c, #2d6a9f); color: #fff; border: none; padding: 20px 26px; }
+    .receta-modal-header h5 { font-weight: 700; display: flex; align-items: center; margin: 0; }
+    .receta-modal-body { padding: 26px; background: #ffffff; }
+    .receta-modal-search { position: relative; margin-bottom: 20px; }
+    .receta-modal-search i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 15px; }
+    .receta-modal-search-input { width: 100%; padding: 12px 16px 12px 44px; border-radius: 12px; border: 2px solid #e2e8f0; background: #f8fafc; color: #1e293b; font-size: 14px; transition: all .3s; }
+    .receta-modal-search-input:focus { outline: none; border-color: #2d6a9f; box-shadow: 0 0 0 3px rgba(45,106,159,0.15); background: #fff; }
+    .receta-modal-table-wrapper { max-height: 380px; overflow-y: auto; border-radius: 12px; border: 1px solid #e2e8f0; }
+    .receta-modal-table { width: 100%; border-collapse: collapse; color: #334155; font-size: 14px; }
+    .receta-modal-table thead { background: #f8fafc; position: sticky; top: 0; z-index: 1; }
+    .receta-modal-table th { padding: 14px 16px; text-align: left; color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; border-bottom: 2px solid #e2e8f0; }
+    .receta-modal-table td { padding: 12px 16px; border-bottom: 1px solid #f1f5f9; }
+    .receta-modal-table tbody tr:hover { background: rgba(45,106,159,0.04); }
+    .receta-modal-paciente { display: flex; align-items: center; gap: 12px; }
+    .receta-modal-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+    .receta-modal-nombre { font-weight: 600; color: #1a3a5c; }
+    .receta-modal-cedula { font-size: 12px; color: #64748b; margin-top: 2px; }
+    .receta-modal-edad { color: #2d6a9f; font-weight: 600; }
+    .receta-modal-tel { color: #64748b; }
+    .receta-modal-btn-select { background: linear-gradient(135deg, #1a3a5c, #2d6a9f); color: #fff; padding: 8px 18px; border-radius: 50px; text-decoration: none; font-weight: 700; font-size: 12px; display: inline-flex; align-items: center; transition: all .25s; border: none; cursor: pointer; }
+    .receta-modal-btn-select:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(45,106,159,0.4); color: #fff; }
+    .receta-modal-empty { text-align: center; padding: 40px 20px; color: #94a3b8; }
 
-.reg-modal { background: #ffffff; border: none; border-radius: 20px; overflow: hidden; box-shadow: 0 25px 80px rgba(0, 0, 0, 0.35); }
-.reg-modal-header { background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 55%, #4fa3d1 100%); color: #fff; border: none; padding: 22px 30px; position: relative; overflow: hidden; }
-.reg-modal-header::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: radial-gradient(circle, rgba(255,255,255,0.12) 1px, transparent 1px); background-size: 20px 20px; opacity: 0.6; }
-.reg-modal-header > * { position: relative; z-index: 1; }
-.reg-modal-icon { width: 54px; height: 54px; background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: #fff; flex-shrink: 0; box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
-.reg-modal-title { font-size: 1.35rem; font-weight: 700; margin: 0 0 2px 0; }
-.reg-modal-sub { margin: 0; opacity: 0.9; font-size: 0.85rem; }
+    .reg-modal { background: #ffffff; border: none; border-radius: 20px; overflow: hidden; box-shadow: 0 25px 80px rgba(0, 0, 0, 0.15); }
+    .reg-modal-header { background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 55%, #4fa3d1 100%); color: #fff; border: none; padding: 22px 30px; position: relative; overflow: hidden; }
+    .reg-modal-header::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: radial-gradient(circle, rgba(255,255,255,0.12) 1px, transparent 1px); background-size: 20px 20px; opacity: 0.6; }
+    .reg-modal-header > * { position: relative; z-index: 1; }
+    .reg-modal-icon { width: 54px; height: 54px; background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: #fff; flex-shrink: 0; box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+    .reg-modal-title { font-size: 1.35rem; font-weight: 700; margin: 0 0 2px 0; }
+    .reg-modal-sub { margin: 0; opacity: 0.9; font-size: 0.85rem; }
 
-.reg-progress { height: 4px; background: #e9ecef; width: 100%; overflow: hidden; }
-.reg-progress-bar { height: 100%; background: linear-gradient(90deg, #1a3a5c, #2d6a9f, #4fa3d1); transition: width 0.4s ease; border-radius: 0 4px 4px 0; }
+    .reg-progress { height: 4px; background: #e9ecef; width: 100%; overflow: hidden; }
+    .reg-progress-bar { height: 100%; background: linear-gradient(90deg, #1a3a5c, #2d6a9f, #4fa3d1); transition: width 0.4s ease; border-radius: 0 4px 4px 0; }
 
-.reg-modal-body { padding: 28px 30px; background: #ffffff; min-height: 380px; }
-.reg-step { animation: fadeStep 0.35s ease forwards; }
-@keyframes fadeStep { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+    .reg-modal-body { padding: 28px 30px; background: #ffffff; min-height: 380px; }
+    .reg-step { animation: fadeStep 0.35s ease forwards; }
+    @keyframes fadeStep { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
 
-.reg-section-title { color: #1a3a5c; font-size: 1rem; font-weight: 700; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #e9ecef; display: flex; align-items: center; gap: 10px; }
-.reg-section-title i { color: #2d6a9f; }
-.reg-label { font-weight: 600; color: #1a3a5c; font-size: 0.85rem; margin-bottom: 6px; display: block; }
-.reg-input-group { display: flex; align-items: stretch; border-radius: 12px; overflow: hidden; border: 2px solid #e9ecef; background: #f8fafc; transition: all 0.3s; }
-.reg-input-group:focus-within { border-color: #2d6a9f; box-shadow: 0 0 0 3px rgba(45, 106, 159, 0.15); background: #fff; }
-.reg-input-icon { display: flex; align-items: center; justify-content: center; padding: 0 14px; color: #2d6a9f; font-size: 0.95rem; border-right: 1px solid #e9ecef; flex-shrink: 0; }
-.reg-input { flex: 1; border: none; background: transparent; padding: 11px 14px; font-size: 0.9rem; font-family: inherit; outline: none; color: #1e293b; width: 100%; }
-.reg-input::placeholder { color: #94a3b8; }
-.reg-check-inline { display: flex; align-items: center; padding: 0 14px; border-left: 1px solid #e9ecef; background: #fff; flex-shrink: 0; gap: 6px; }
-.reg-check-inline input { transform: scale(1.15); cursor: pointer; }
-.reg-check-inline label { font-size: 0.83rem; cursor: pointer; user-select: none; margin: 0; font-weight: 600; color: #475569; }
-.reg-help { color: #64748b; font-size: 0.72rem; display: block; margin-top: 4px; }
+    .reg-section-title { color: #1a3a5c; font-size: 1rem; font-weight: 700; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #e9ecef; display: flex; align-items: center; gap: 10px; }
+    .reg-section-title i { color: #2d6a9f; }
+    .reg-label { font-weight: 600; color: #1a3a5c; font-size: 0.85rem; margin-bottom: 6px; display: block; }
+    .reg-input-group { display: flex; align-items: stretch; border-radius: 12px; overflow: hidden; border: 2px solid #e9ecef; background: #f8fafc; transition: all 0.3s; }
+    .reg-input-group:focus-within { border-color: #2d6a9f; box-shadow: 0 0 0 3px rgba(45, 106, 159, 0.15); background: #fff; }
+    .reg-input-icon { display: flex; align-items: center; justify-content: center; padding: 0 14px; color: #2d6a9f; font-size: 0.95rem; border-right: 1px solid #e9ecef; flex-shrink: 0; }
+    .reg-input { flex: 1; border: none; background: transparent; padding: 11px 14px; font-size: 0.9rem; font-family: inherit; outline: none; color: #1e293b; width: 100%; }
+    .reg-input::placeholder { color: #94a3b8; }
+    .reg-check-inline { display: flex; align-items: center; padding: 0 14px; border-left: 1px solid #e9ecef; background: #fff; flex-shrink: 0; gap: 6px; }
+    .reg-check-inline input { transform: scale(1.15); cursor: pointer; }
+    .reg-check-inline label { font-size: 0.83rem; cursor: pointer; user-select: none; margin: 0; font-weight: 600; color: #475569; }
+    .reg-help { color: #64748b; font-size: 0.72rem; display: block; margin-top: 4px; }
 
-.reg-enf-container { background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 14px; padding: 20px; }
-.reg-toggle-group { display: flex; gap: 12px; margin-bottom: 20px; }
-.reg-toggle-btn { flex: 1; text-align: center; padding: 12px; border-radius: 12px; border: 2px solid #e9ecef; background: #fff; font-weight: 700; font-size: 0.88rem; cursor: pointer; transition: all 0.25s; color: #475569; margin: 0; }
-.reg-toggle-btn:hover { border-color: #2d6a9f; color: #2d6a9f; }
-.btn-check:checked + .reg-toggle-btn { border-color: #64748b; background: #64748b; color: #fff; }
-.btn-check:checked + .reg-toggle-si { border-color: #2d6a9f; background: linear-gradient(135deg, #1a3a5c, #2d6a9f); color: #fff; box-shadow: 0 6px 18px rgba(45, 106, 159, 0.3); }
+    .reg-enf-container { background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 14px; padding: 20px; }
+    .reg-toggle-group { display: flex; gap: 12px; margin-bottom: 20px; }
+    .reg-toggle-btn { flex: 1; text-align: center; padding: 12px; border-radius: 12px; border: 2px solid #e9ecef; background: #fff; font-weight: 700; font-size: 0.88rem; cursor: pointer; transition: all 0.25s; color: #475569; margin: 0; }
+    .reg-toggle-btn:hover { border-color: #2d6a9f; color: #2d6a9f; }
+    .btn-check:checked + .reg-toggle-btn { border-color: #64748b; background: #64748b; color: #fff; }
+    .btn-check:checked + .reg-toggle-si { border-color: #2d6a9f; background: linear-gradient(135deg, #1a3a5c, #2d6a9f); color: #fff; box-shadow: 0 6px 18px rgba(45, 106, 159, 0.3); }
 
-.reg-check-card { background: #fff; border: 2px solid #e9ecef; border-radius: 12px; padding: 12px 16px; transition: all 0.2s; cursor: pointer; display: flex; align-items: center; gap: 10px; margin: 0; width: 100%; }
-.reg-check-card:hover { border-color: #2d6a9f; }
-.reg-check-card input { transform: scale(1.15); cursor: pointer; margin: 0; }
-.reg-check-card span { font-weight: 700; color: #1a3a5c; font-size: 0.86rem; }
+    .reg-check-card { background: #fff; border: 2px solid #e9ecef; border-radius: 12px; padding: 12px 16px; transition: all 0.2s; cursor: pointer; display: flex; align-items: center; gap: 10px; margin: 0; width: 100%; }
+    .reg-check-card:hover { border-color: #2d6a9f; }
+    .reg-check-card input { transform: scale(1.15); cursor: pointer; margin: 0; }
+    .reg-check-card span { font-weight: 700; color: #1a3a5c; font-size: 0.86rem; }
 
-.reg-modal-footer { background: #f8fafc; border-top: 1px solid #e9ecef; padding: 18px 30px; display: flex; justify-content: flex-end; gap: 12px; }
-.reg-btn-cancel { background: #fff; color: #475569; border: 2px solid #e2e8f0; padding: 11px 26px; border-radius: 50px; font-weight: 700; cursor: pointer; transition: all 0.25s; font-size: 0.9rem; }
-.reg-btn-cancel:hover { background: #f1f5f9; color: #1a3a5c; border-color: #cbd5e1; }
-.reg-btn-save { background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 100%); color: #fff; border: none; padding: 11px 26px; border-radius: 50px; font-weight: 700; cursor: pointer; transition: all 0.25s; font-size: 0.9rem; box-shadow: 0 6px 18px rgba(45, 106, 159, 0.3); }
-.reg-btn-save:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(45, 106, 159, 0.45); color: #fff; }
+    .reg-modal-footer { background: #f8fafc; border-top: 1px solid #e9ecef; padding: 18px 30px; display: flex; justify-content: flex-end; gap: 12px; }
+    .reg-btn-cancel { background: #fff; color: #475569; border: 2px solid #e2e8f0; padding: 11px 26px; border-radius: 50px; font-weight: 700; cursor: pointer; transition: all 0.25s; font-size: 0.9rem; }
+    .reg-btn-cancel:hover { background: #f1f5f9; color: #1a3a5c; border-color: #cbd5e1; }
+    .reg-btn-save { background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 100%); color: #fff; border: none; padding: 11px 26px; border-radius: 50px; font-weight: 700; cursor: pointer; transition: all 0.25s; font-size: 0.9rem; box-shadow: 0 6px 18px rgba(45, 106, 159, 0.3); }
+    .reg-btn-save:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(45, 106, 159, 0.45); color: #fff; }
 
-.receta-header { margin-bottom: 25px; }
-.receta-header-content { background: linear-gradient(135deg, #1a365d 0%, #2563eb 50%, #3b82f6 100%); border-radius: 20px; padding: 25px 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; box-shadow: 0 15px 40px rgba(37, 99, 235, 0.3); }
-.receta-header-left { display: flex; align-items: center; gap: 15px; }
-.receta-icon-wrapper { background: rgba(255,255,255,.2); border-radius: 50%; padding: 15px; font-size: 28px; color: #fff; }
-.receta-title { font-size: 28px; font-weight: 700; margin: 0; color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,.3); }
-.receta-subtitle { margin: 5px 0 0; color: rgba(255,255,255,.9); font-size: 16px; }
-.receta-divider { margin: 0 10px; opacity: .5; }
-.receta-header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.receta-btn-light { background: rgba(255,255,255,0.95); color: #1a365d; padding: 10px 25px; border-radius: 50px; text-decoration: none; font-weight: 700; box-shadow: 0 4px 15px rgba(0,0,0,.2); transition: all .3s; display: inline-block; border: none; cursor: pointer; font-size: 14px; }
-.receta-btn-light:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,.3); }
-.receta-badge { background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); color: #fff; padding: 8px 20px; border-radius: 50px; font-weight: 700; font-size: 14px; border: 1px solid rgba(255,255,255,0.2); }
+    /* TARJETAS PRINCIPALES EN MODO CLARO */
+    .receta-header { margin-bottom: 25px; }
+    .receta-header-content { background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 55%, #4fa3d1 100%); border-radius: 20px; padding: 25px 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; box-shadow: 0 15px 40px rgba(45,106,159, 0.25); }
+    .receta-header-left { display: flex; align-items: center; gap: 15px; }
+    .receta-icon-wrapper { background: rgba(255,255,255,.2); border-radius: 50%; padding: 15px; font-size: 28px; color: #fff; }
+    .receta-title { font-size: 28px; font-weight: 700; margin: 0; color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,.3); }
+    .receta-subtitle { margin: 5px 0 0; color: rgba(255,255,255,.9); font-size: 16px; }
+    .receta-divider { margin: 0 10px; opacity: .5; }
+    .receta-header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .receta-btn-light { background: #ffffff; color: #1a3a5c; padding: 10px 25px; border-radius: 50px; text-decoration: none; font-weight: 700; box-shadow: 0 4px 15px rgba(0,0,0,.1); transition: all .3s; display: inline-block; border: none; cursor: pointer; font-size: 14px; }
+    .receta-btn-light:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,.15); }
+    .receta-badge { background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); color: #fff; padding: 8px 20px; border-radius: 50px; font-weight: 700; font-size: 14px; border: 1px solid rgba(255,255,255,0.3); }
 
-.receta-card { background: linear-gradient(135deg, #1e293b, #2d3748); border-radius: 20px; padding: 30px; border: 1px solid rgba(59, 130, 246, 0.2); box-shadow: 0 20px 50px rgba(0,0,0,.3); }
-.receta-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-.receta-card-title { color: #60a5fa; margin: 0; font-weight: 700; font-size: 22px; }
-.receta-card-badge { background: linear-gradient(135deg, #2563eb, #3b82f6); color: #fff; padding: 8px 20px; border-radius: 50px; font-weight: 700; font-size: 14px; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3); }
+    .receta-card { background: #ffffff; border-radius: 20px; padding: 30px; border: 1px solid #e2e8f0; box-shadow: 0 10px 30px rgba(15,23,42,0.05); }
+    .receta-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+    .receta-card-title { color: #1a3a5c; margin: 0; font-weight: 700; font-size: 22px; }
+    .receta-card-badge { background: linear-gradient(135deg, #1a3a5c, #2d6a9f); color: #fff; padding: 8px 20px; border-radius: 50px; font-weight: 700; font-size: 14px; box-shadow: 0 4px 15px rgba(45,106,159,0.3); }
 
-.receta-item { background: linear-gradient(135deg, #0f172a, #1a2332); border-radius: 15px; padding: 20px; margin-bottom: 15px; border: 1px solid rgba(59, 130, 246, 0.1); }
-.receta-item-grid { display: grid; grid-template-columns: 1fr 1fr .5fr .3fr; gap: 15px; align-items: end; }
-.receta-label { color: #94a3b8; font-size: 13px; font-weight: 600; display: block; margin-bottom: 5px; }
-.receta-select { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #3b82f6; background: #0f172a; color: #e2e8f0; font-size: 14px; font-family: inherit; cursor: pointer; transition: all .3s; }
-.receta-select:focus { outline: none; border-color: #60a5fa; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
-.receta-select optgroup { font-weight: 700; color: #93c5fd; background: #1e293b; }
-.receta-select option { background: #0f172a; color: #e2e8f0; }
-.receta-input { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #3b82f6; background: #0f172a; color: #e2e8f0; font-size: 14px; transition: all .3s; font-family: inherit; }
-.receta-input:focus { outline: none; border-color: #60a5fa; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
-.receta-input::placeholder { color: #64748b; }
-.receta-item-actions { display: flex; align-items: flex-end; justify-content: flex-end; }
-.receta-btn-delete { background: linear-gradient(135deg, #dc2626, #ef4444); color: #fff; border: none; padding: 12px 20px; border-radius: 10px; cursor: pointer; font-size: 16px; transition: all .3s; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2); }
-.receta-btn-delete:hover { transform: scale(1.05); box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3); }
-.receta-btn-add { background: linear-gradient(135deg, #059669, #10b981); color: #fff; border: none; padding: 12px 30px; border-radius: 50px; font-weight: 700; font-size: 15px; cursor: pointer; transition: all .3s; margin-top: 10px; box-shadow: 0 4px 15px rgba(5, 150, 105, 0.3); }
-.receta-btn-add:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(5, 150, 105, 0.4); }
-.receta-observaciones { margin: 20px 0; }
-.receta-textarea { width: 100%; padding: 14px; border-radius: 12px; border: 2px solid #3b82f6; background: #0f172a; color: #e2e8f0; font-size: 15px; resize: vertical; transition: all .3s; font-family: inherit; }
-.receta-textarea:focus { outline: none; border-color: #60a5fa; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
-.receta-textarea::placeholder { color: #64748b; }
-.receta-help { color: #64748b; font-size: 13px; display: block; margin-top: 5px; }
-.receta-divider-full { border: none; border-top: 2px solid rgba(59, 130, 246, 0.2); margin: 25px 0; }
-.receta-firma { background: linear-gradient(135deg, #0f172a, #1a2332); border-radius: 15px; padding: 20px; border: 2px solid #3b82f6; margin-bottom: 25px; display: flex; align-items: center; }
-.receta-firma-icon { background: linear-gradient(135deg, #2563eb, #3b82f6); border-radius: 50%; padding: 15px; margin-right: 15px; color: #fff; font-size: 24px; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3); }
-.receta-firma-label { color: #94a3b8; font-size: 12px; font-weight: 700; text-transform: uppercase; display: block; }
-.receta-firma-code { color: #e2e8f0; font-size: 14px; }
-.receta-btn-submit { width: 100%; padding: 18px; border-radius: 50px; border: none; font-size: 18px; font-weight: 700; color: #fff; background: linear-gradient(135deg, #1a365d 0%, #2563eb 50%, #3b82f6 100%); cursor: pointer; transition: all .3s; box-shadow: 0 8px 25px rgba(37, 99, 235, 0.3); }
-.receta-btn-submit:hover { transform: translateY(-2px); box-shadow: 0 12px 35px rgba(37, 99, 235, 0.5); }
-.receta-btn-submit:disabled { opacity: .5; cursor: not-allowed; transform: none !important; }
-.receta-input.is-invalid, .receta-select.is-invalid { border-color: #ef4444 !important; box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important; }
+    .receta-item { background: #f8fafc; border-radius: 15px; padding: 20px; margin-bottom: 15px; border: 1px solid #e2e8f0; }
+    .receta-item-grid { display: grid; grid-template-columns: 1fr 1fr .5fr .3fr; gap: 15px; align-items: end; }
+    .receta-label { color: #475569; font-size: 13px; font-weight: 600; display: block; margin-bottom: 5px; }
+    .receta-select { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #e2e8f0; background: #ffffff; color: #1e293b; font-size: 14px; font-family: inherit; cursor: pointer; transition: all .3s; }
+    .receta-select:focus { outline: none; border-color: #2d6a9f; box-shadow: 0 0 0 3px rgba(45,106,159,0.15); }
+    .receta-select optgroup { font-weight: 700; color: #1a3a5c; background: #f8fafc; }
+    .receta-select option { background: #ffffff; color: #1e293b; }
+    .receta-input { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #e2e8f0; background: #ffffff; color: #1e293b; font-size: 14px; transition: all .3s; font-family: inherit; }
+    .receta-input:focus { outline: none; border-color: #2d6a9f; box-shadow: 0 0 0 3px rgba(45,106,159,0.15); }
+    .receta-input::placeholder { color: #94a3b8; }
+    .receta-item-actions { display: flex; align-items: flex-end; justify-content: flex-end; }
+    .receta-btn-delete { background: #fee2e2; color: #dc2626; border: none; padding: 12px 20px; border-radius: 10px; cursor: pointer; font-size: 16px; transition: all .3s; }
+    .receta-btn-delete:hover { background: #fecaca; }
+    .receta-btn-add { background: #e0f2fe; color: #1a3a5c; border: none; padding: 12px 30px; border-radius: 50px; font-weight: 700; font-size: 15px; cursor: pointer; transition: all .3s; margin-top: 10px; }
+    .receta-btn-add:hover { background: #bae6fd; transform: translateY(-2px); }
+    .receta-observaciones { margin: 20px 0; }
+    .receta-textarea { width: 100%; padding: 14px; border-radius: 12px; border: 2px solid #e2e8f0; background: #ffffff; color: #1e293b; font-size: 15px; resize: vertical; transition: all .3s; font-family: inherit; }
+    .receta-textarea:focus { outline: none; border-color: #2d6a9f; box-shadow: 0 0 0 3px rgba(45,106,159,0.15); }
+    .receta-textarea::placeholder { color: #94a3b8; }
+    .receta-help { color: #64748b; font-size: 13px; display: block; margin-top: 5px; }
+    .receta-divider-full { border: none; border-top: 2px solid #e2e8f0; margin: 25px 0; }
+    .receta-firma { background: #f8fafc; border-radius: 15px; padding: 20px; border: 2px solid #e2e8f0; margin-bottom: 25px; display: flex; align-items: center; }
+    .receta-firma-icon { background: #e0f2fe; border-radius: 50%; padding: 15px; margin-right: 15px; color: #2d6a9f; font-size: 24px; }
+    .receta-firma-label { color: #64748b; font-size: 12px; font-weight: 700; text-transform: uppercase; display: block; }
+    .receta-firma-code { color: #1e293b; font-size: 14px; }
+    .receta-btn-submit { width: 100%; padding: 18px; border-radius: 50px; border: none; font-size: 18px; font-weight: 700; color: #fff; background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 100%); cursor: pointer; transition: all .3s; box-shadow: 0 8px 25px rgba(45,106,159,0.3); }
+    .receta-btn-submit:hover { transform: translateY(-2px); box-shadow: 0 12px 35px rgba(45,106,159,0.5); }
+    .receta-btn-submit:disabled { opacity: .5; cursor: not-allowed; transform: none !important; }
+    .receta-input.is-invalid, .receta-select.is-invalid { border-color: #ef4444 !important; box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important; }
 
-@media (max-width: 768px) {
-    .receta-item-grid { grid-template-columns: 1fr 1fr; }
-    .receta-item-actions { grid-column: span 2; justify-content: flex-end; }
-    .receta-header-content { flex-direction: column; text-align: center; }
-    .receta-header-left { flex-direction: column; text-align: center; }
-    .receta-title { font-size: 22px; }
-    .receta-container { padding: 15px; }
-    .receta-card { padding: 20px; }
-    .receta-modal-table th, .receta-modal-table td { padding: 10px 12px; font-size: 13px; }
-    .reg-modal-body { padding: 20px; min-height: auto; }
-    .reg-modal-header { padding: 18px 20px; }
-    .reg-toggle-group { flex-direction: column; }
-    .reg-modal-footer { flex-wrap: wrap; }
-}
-@media (max-width: 480px) {
-    .receta-item-grid { grid-template-columns: 1fr; }
-    .receta-item-actions { grid-column: span 1; justify-content: center; }
-}
+    @media (max-width: 768px) {
+        .receta-item-grid { grid-template-columns: 1fr 1fr; }
+        .receta-item-actions { grid-column: span 2; justify-content: flex-end; }
+        .receta-header-content { flex-direction: column; text-align: center; }
+        .receta-header-left { flex-direction: column; text-align: center; }
+        .receta-title { font-size: 22px; }
+        .receta-container { padding: 15px; }
+        .receta-card { padding: 20px; }
+        .receta-modal-table th, .receta-modal-table td { padding: 10px 12px; font-size: 13px; }
+        .reg-modal-body { padding: 20px; min-height: auto; }
+        .reg-modal-header { padding: 18px 20px; }
+        .reg-toggle-group { flex-direction: column; }
+        .reg-modal-footer { flex-wrap: wrap; }
+    }
+    @media (max-width: 480px) {
+        .receta-item-grid { grid-template-columns: 1fr; }
+        .receta-item-actions { grid-column: span 1; justify-content: center; }
+    }
 </style>
 
 

@@ -99,11 +99,14 @@ require_once '../../includes/sidebar.php';
 
 <style>
 .reportes-personal {
+    /* ELIMINAR ESPACIO EN BLANCO SUPERIOR */
+    margin-top: -15px !important;
+    
     padding: 24px 32px;
     width: 100%;
     max-width: 100%;
     min-height: 100vh;
-    background: #f5f6fa;
+    background: #f4f6f9;
     color: #1e293b;
     box-sizing: border-box;
     overflow-x: hidden;
@@ -114,7 +117,8 @@ require_once '../../includes/sidebar.php';
 }
 
 .rp-banner {
-    background: linear-gradient(135deg, #065499, #991b1b);
+    /* PALETA AZUL LOGIN */
+    background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 55%, #4fa3d1 100%);
     border-radius: 20px;
     padding: 30px 35px;
     margin-bottom: 30px;
@@ -123,7 +127,7 @@ require_once '../../includes/sidebar.php';
     align-items: center;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 10px 25px rgba(220, 38, 38, 0.2);
+    box-shadow: 0 10px 25px rgba(45, 106, 159, 0.25);
 }
 
 .rp-banner::before {
@@ -232,7 +236,7 @@ require_once '../../includes/sidebar.php';
 .rp-card-clickable:hover {
     transform: translateY(-4px);
     box-shadow: 0 12px 25px rgba(15, 23, 42, .08);
-    border-color: #dc2626; /* Borde rojo al pasar el mouse */
+    border-color: #2d6a9f; /* Borde azul al pasar el mouse */
 }
 
 .rp-card-top {
@@ -263,11 +267,11 @@ require_once '../../includes/sidebar.php';
 
 .rp-verde { background: #dcfce7; color: #15803d; }
 .rp-rojo { background: #fee2e2; color: #b91c1c; }
-.rp-azul { background: #dbeafe; color: #1d4ed8; }
+.rp-azul { background: #e0f2fe; color: #1a3a5c; } /* Azul login */
 
 .rp-card-numero {
     margin: 20px 0 8px;
-    color: #172554;
+    color: #1a3a5c; /* Azul oscuro */
     font-size: 40px;
     line-height: 1.1;
     font-weight: 800;
@@ -281,7 +285,7 @@ require_once '../../includes/sidebar.php';
 
 .rp-card-doctor {
     margin-top: 16px;
-    color: #b91c1c;
+    color: #1a3a5c; /* Azul oscuro */
     font-size: 18px;
     font-weight: 800;
     overflow-wrap: anywhere;
@@ -326,14 +330,14 @@ require_once '../../includes/sidebar.php';
     justify-content: center;
     align-items: center;
     border-radius: 14px;
-    background: #fee2e2;
-    color: #b91c1c;
+    background: #e0f2fe; /* Azul claro */
+    color: #1a3a5c;      /* Azul oscuro */
     font-size: 20px;
 }
 
 .rp-panel-header h2 {
     margin: 0 0 6px;
-    color: #172554;
+    color: #1a3a5c;
     font-size: 18px;
     font-weight: 800;
 }
@@ -394,7 +398,7 @@ require_once '../../includes/sidebar.php';
 }
 
 .rp-tabla tbody tr:hover {
-    background: #fff8f8;
+    background: #f0f9ff; /* Fondo azul muy suave */
 }
 
 .rp-doctor-nombre {
@@ -412,8 +416,8 @@ require_once '../../includes/sidebar.php';
     align-items: center;
     justify-content: center;
     border-radius: 12px;
-    background: #fee2e2;
-    color: #b91c1c;
+    background: #e0f2fe; /* Azul claro */
+    color: #1a3a5c;      /* Azul oscuro */
     font-size: 18px;
 }
 
@@ -423,13 +427,13 @@ require_once '../../includes/sidebar.php';
     text-align: center;
     padding: 8px 14px;
     border-radius: 10px;
-    background: #eff6ff;
-    color: #1d4ed8;
+    background: #e0f2fe; /* Azul claro */
+    color: #1a3a5c;      /* Azul oscuro */
     font-weight: 800;
 }
 
 .rp-badge-primero {
-    background: #fef3c7;
+    background: #fef3c7; /* Dorado para el primero */
     color: #92400e;
 }
 
@@ -495,7 +499,7 @@ require_once '../../includes/sidebar.php';
 .rp-modal-header h3 {
     margin: 0;
     font-size: 18px;
-    color: #172554;
+    color: #1a3a5c;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -516,8 +520,8 @@ require_once '../../includes/sidebar.php';
 }
 
 .rp-modal-close:hover {
-    background: #fee2e2;
-    color: #b91c1c;
+    background: #e0f2fe; /* Azul claro */
+    color: #1a3a5c;      /* Azul oscuro */
 }
 
 .rp-modal-body {
@@ -867,7 +871,7 @@ new Chart(document.getElementById('graficoDestacado'), {
                 recetasDoctorDestacado,
                 Math.max(0, cantidadesRecetas.reduce((a, b) => a + b, 0) - recetasDoctorDestacado)
             ],
-            backgroundColor: ['#24b7dc', '#e2e8f0'],
+            backgroundColor: ['#2d6a9f', '#e2e8f0'], /* Azul login */
             borderColor: ['#ffffff', '#ffffff'],
             borderWidth: 4,
             hoverOffset: 8
@@ -898,7 +902,7 @@ if (canvasRanking && nombresDoctores.length > 0) {
                 label: 'Recetas registradas',
                 data: cantidadesRecetas,
                 backgroundColor: nombresDoctores.map((nombre, indice) => {
-                    return indice === 0 && cantidadesRecetas[0] > 0 ? '#dc2626' : '#94a3b8';
+                    return indice === 0 && cantidadesRecetas[0] > 0 ? '#2d6a9f' : '#94a3b8'; /* Azul login para el 1er lugar */
                 }),
                 borderRadius: 8,
                 borderSkipped: false,
@@ -925,4 +929,3 @@ if (canvasRanking && nombresDoctores.length > 0) {
     });
 }
 </script>
-

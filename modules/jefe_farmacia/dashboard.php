@@ -1,4 +1,5 @@
 <?php
+// Configuración estricta de sesión para Vercel
 if (session_status() === PHP_SESSION_NONE) {
     session_save_path('/tmp');
     session_set_cookie_params([
@@ -63,7 +64,9 @@ $lista_por_vencer = $conn->query("SELECT m.nombre, l.cantidad, l.fecha_vencimien
 ?>
 
 <style>
-    .dashboard-container { padding: 20px; margin-top: 15px; }
+    /* ELIMINAR ESPACIO EN BLANCO SUPERIOR */
+    .main-content { padding-top: 0 !important; }
+    .dashboard-container { padding: 20px; margin-top: -15px; }
     
     .stat-card {
         border: none;
@@ -72,17 +75,19 @@ $lista_por_vencer = $conn->query("SELECT m.nombre, l.cantidad, l.fecha_vencimien
         transition: transform 0.3s ease, box-shadow 0.3s ease;
         overflow: hidden;
         position: relative;
-        cursor: pointer; /* Hace que aparezca la manito */
+        cursor: pointer;
     }
 
     .stat-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 10px 25px rgba(0,0,0,0.15);
     }
-    .card-blue { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); cursor: default; }
-    .card-orange { background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%); }
-    .card-red { background: linear-gradient(135deg, #cb2d3e 0%, #ef473a 100%); }
-    .card-green { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); cursor: default; }
+    
+    /* PALETA AZUL LOGIN */
+    .card-blue { background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 100%); cursor: default; }
+    .card-orange { background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%); } /* Alerta stock */
+    .card-red { background: linear-gradient(135deg, #cb2d3e 0%, #ef473a 100%); }    /* Alerta vencimiento */
+    .card-green { background: linear-gradient(135deg, #2d6a9f 0%, #4fa3d1 100%); cursor: default; } /* Azul claro */
     
     .stat-icon {
         position: absolute;
@@ -128,7 +133,7 @@ $lista_por_vencer = $conn->query("SELECT m.nombre, l.cantidad, l.fecha_vencimien
         padding: 20px 25px;
         font-weight: 700;
         font-size: 1.1rem;
-        color: #1e3c72;
+        color: #1a3a5c;
     }
 
     .table thead th {
@@ -143,15 +148,15 @@ $lista_por_vencer = $conn->query("SELECT m.nombre, l.cantidad, l.fecha_vencimien
     }
 
     .table tbody tr:hover {
-        background: #f8f9fa;
+        background: rgba(45, 106, 159, 0.04); /* Hover azul */
     }
-    .btn-gradient-blue { background: linear-gradient(135deg, #1e3c72, #2a5298); color: #fff; border: none; }
-    .btn-gradient-blue:hover { color: #fff; opacity: 0.9; }
+    .btn-gradient-blue { background: linear-gradient(135deg, #1a3a5c, #2d6a9f); color: #fff; border: none; }
+    .btn-gradient-blue:hover { color: #fff; opacity: 0.9; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(45,106,159,0.4); }
 
     .badge-soft-warning { background: #fff3cd; color: #856404; padding: 8px 12px; border-radius: 8px; font-weight: 600; }
     .badge-soft-success { background: #d4edda; color: #155724; padding: 8px 12px; border-radius: 8px; font-weight: 600; }
     
-    /* Paginación Bonita (Redonda) */
+    /* PAGINACIÓN AZUL */
     .pagination { gap: 6px; }
     .page-item .page-link {
         border-radius: 50%;
@@ -161,23 +166,24 @@ $lista_por_vencer = $conn->query("SELECT m.nombre, l.cantidad, l.fecha_vencimien
         align-items: center;
         justify-content: center;
         border: 2px solid #e9ecef;
-        color: #1e3c72;
+        color: #1a3a5c;
         font-weight: 700;
         transition: all 0.2s;
     }
     .page-item.active .page-link {
-        background: linear-gradient(135deg, #1e3c72, #2a5298);
+        background: linear-gradient(135deg, #1a3a5c, #2d6a9f);
         color: white;
         border-color: transparent;
-        box-shadow: 0 4px 10px rgba(30,60,114,0.3);
+        box-shadow: 0 4px 10px rgba(45,106,159,0.3);
     }
     .page-item .page-link:hover {
         background: #f8f9fa;
-        border-color: #1e3c72;
+        border-color: #2d6a9f;
     }
 </style>
 
 <div class="container-fluid px-4 mt-4">
+    <!-- BANNER AZUL -->
     <div class="card border-0 shadow-lg rounded-4 overflow-hidden position-relative" 
          style="background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 100%);">
         <i class="fas fa-pills position-absolute" style="font-size: 150px; right: 20px; top: -30px; opacity: 0.1; color: white;"></i>
@@ -204,7 +210,7 @@ $lista_por_vencer = $conn->query("SELECT m.nombre, l.cantidad, l.fecha_vencimien
 
 <div class="container-fluid dashboard-container fade-in">
     <div class="row g-4 mb-4">
-        <!-- Recetas Pendientes -->
+        <!-- Recetas Pendientes (Azul) -->
         <div class="col-xl-3 col-md-6">
             <div class="card stat-card card-blue h-100">
                 <div class="card-body">
@@ -224,7 +230,7 @@ $lista_por_vencer = $conn->query("SELECT m.nombre, l.cantidad, l.fecha_vencimien
             </div>
         </div>
 
-        <!-- Stock Bajo CON VENTANA MODAL -->
+        <!-- Stock Bajo (Alerta Naranja) -->
         <div class="col-xl-3 col-md-6">
             <div class="card stat-card card-orange h-100" data-bs-toggle="modal" data-bs-target="#modalStockBajo">
                 <div class="card-body">
@@ -247,7 +253,7 @@ $lista_por_vencer = $conn->query("SELECT m.nombre, l.cantidad, l.fecha_vencimien
             </div>
         </div>
 
-        <!-- Por Vencer CON VENTANA MODAL -->
+        <!-- Por Vencer (Alerta Roja) -->
         <div class="col-xl-3 col-md-6">
             <div class="card stat-card card-red h-100" data-bs-toggle="modal" data-bs-target="#modalPorVencer">
                 <div class="card-body">
@@ -270,7 +276,7 @@ $lista_por_vencer = $conn->query("SELECT m.nombre, l.cantidad, l.fecha_vencimien
             </div>
         </div>
 
-        <!-- Pacientes Activos -->
+        <!-- Pacientes Activos (Azul Claro) -->
         <div class="col-xl-3 col-md-6">
             <div class="card stat-card card-green h-100">
                 <div class="card-body">
@@ -296,7 +302,7 @@ $lista_por_vencer = $conn->query("SELECT m.nombre, l.cantidad, l.fecha_vencimien
         <div class="col-12">
             <div class="card custom-card h-100">
                 <div class="card-header custom-card-header d-flex justify-content-between align-items-center">
-                    <span><i class="fas fa-file-prescription text-primary me-2"></i>Recetas Recientes</span>
+                    <span><i class="fas fa-file-prescription me-2" style="color: #2d6a9f;"></i>Recetas Recientes</span>
                     <a href="recetas_recibidas.php" class="btn btn-gradient-blue btn-sm rounded-pill px-3">Ver todas</a>
                 </div>
                 <div class="card-body p-0">
@@ -339,7 +345,7 @@ $lista_por_vencer = $conn->query("SELECT m.nombre, l.cantidad, l.fecha_vencimien
                                             </span>
                                         </td>
                                         <td class="text-center">
-                                            <button class="btn btn-sm btn-outline-info rounded-circle" onclick="verReceta(<?php echo $receta['id']; ?>)">
+                                            <button class="btn btn-sm btn-outline-primary rounded-circle" onclick="verReceta(<?php echo $receta['id']; ?>)">
                                                 <i class="fas fa-eye"></i>
                                             </button>
                                         </td>
@@ -487,7 +493,7 @@ function verReceta(id) {
                         </div>
                     `,
                     confirmButtonText: 'Aceptar',
-                    confirmButtonColor: '#1e3c72'
+                    confirmButtonColor: '#2d6a9f' /* Botón azul */
                 });
             }, 1500);
         }

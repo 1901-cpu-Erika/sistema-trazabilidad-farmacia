@@ -1,13 +1,24 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) session_save_path('/tmp'); // Esto es clave para Vercel
-   session_save_path('/tmp'); // Clave para Vercel
+// Configuración estricta de sesión para Vercel
+if (session_status() === PHP_SESSION_NONE) {
+    session_save_path('/tmp'); // Clave para Vercel
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'secure' => true,
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
     session_start();
+}
+
 require_once '../../config/database.php';
 
 if (!isset($_SESSION['usuario_id']) || $_SESSION['tipo_usuario'] !== 'jefe_farmacia') {
     header("Location: /login.php");
     exit();
 }
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['crear'])) {
     $nombre = trim($_POST['nombre'] ?? '');
     if ($nombre !== '') {
@@ -68,20 +79,26 @@ require_once '../../includes/sidebar.php';
 ?>
 
 <style>
+    /* ELIMINAR ESPACIO EN BLANCO SUPERIOR */
+    .main-content { padding-top: 0 !important; }
+    .container-fluid.px-4 { margin-top: -15px; }
+
+    /* PALETA AZUL DEL LOGIN */
     :root {
-        --cat-primary: #059669;
-        --cat-primary-dark: #065f46;
-        --cat-primary-light: #d1fae5;
-        --cat-accent: #10b981;
+        --cat-primary: #2d6a9f;
+        --cat-primary-dark: #1a3a5c;
+        --cat-primary-light: #e0f2fe;
+        --cat-accent: #4fa3d1;
     }
+    
     .cat-hero {
-        background: linear-gradient(135deg, var(--cat-primary-dark) 0%, var(--cat-primary) 55%, var(--cat-accent) 100%);
+        background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 55%, #4fa3d1 100%);
         border-radius: 22px;
         padding: 32px 34px;
         color: #fff;
         position: relative;
         overflow: hidden;
-        box-shadow: 0 15px 40px rgba(5,150,105,0.28);
+        box-shadow: 0 15px 40px rgba(45,106,159,0.28);
         margin-bottom: 26px;
     }
     .cat-hero::before {
@@ -136,12 +153,13 @@ require_once '../../includes/sidebar.php';
         border-radius: 14px;
         padding: 14px 18px;
         display: flex; align-items: center; gap: 10px;
-        background: linear-gradient(135deg,#ecfdf5,#f0fdf4);
-        color: #065f46;
-        box-shadow: 0 4px 14px rgba(5,150,105,0.08);
+        background: linear-gradient(135deg,#e0f2fe,#f0f9ff);
+        color: #1a3a5c;
+        box-shadow: 0 4px 14px rgba(45,106,159,0.08);
         font-weight: 500;
     }
     .cat-alert i { font-size: 1.2rem; color: var(--cat-primary); }
+    
     .cat-card {
         background: #fff;
         border-radius: 18px;
@@ -194,12 +212,12 @@ require_once '../../includes/sidebar.php';
     }
     .cat-table tbody tr { transition: all 0.18s; }
     .cat-table tbody tr:hover {
-        background: linear-gradient(90deg, rgba(5,150,105,0.04), transparent);
+        background: linear-gradient(90deg, rgba(45,106,159,0.04), transparent);
         transform: scale(1.002);
     }
 
     .cat-id-badge {
-        background: #ecfdf5;
+        background: #e0f2fe;
         color: var(--cat-primary-dark);
         padding: 4px 12px;
         border-radius: 20px;
@@ -207,6 +225,7 @@ require_once '../../includes/sidebar.php';
         font-size: 0.78rem;
     }
     .cat-name { font-weight: 700; color: #0f172a; font-size: 1rem; }
+    
     .cat-count {
         background: #dbeafe;
         color: #1e40af;
@@ -217,6 +236,7 @@ require_once '../../includes/sidebar.php';
         display: inline-flex; align-items: center; gap: 5px;
     }
     .cat-count.empty { background: #f1f5f9; color: #64748b; }
+    
     .cat-action-btn {
         width: 34px; height: 34px;
         border-radius: 10px;
@@ -266,7 +286,7 @@ require_once '../../includes/sidebar.php';
     }
     .cat-search input:focus {
         border-color: var(--cat-primary);
-        box-shadow: 0 0 0 4px rgba(5,150,105,0.12);
+        box-shadow: 0 0 0 4px rgba(45,106,159,0.12);
         background: #fff;
         outline: none;
     }
@@ -281,6 +301,7 @@ require_once '../../includes/sidebar.php';
         font-size: 0.85rem;
     }
 
+    /* PAGINACIÓN AZUL */
     .pagination { gap: 6px; }
     .page-item .page-link {
         border-radius: 50%;
@@ -298,7 +319,7 @@ require_once '../../includes/sidebar.php';
         background: linear-gradient(135deg, var(--cat-primary-dark), var(--cat-primary));
         color: white;
         border-color: transparent;
-        box-shadow: 0 4px 10px rgba(5,150,105,0.3);
+        box-shadow: 0 4px 10px rgba(45,106,159,0.3);
     }
     .page-item .page-link:hover {
         background: #f8f9fa;
@@ -338,7 +359,7 @@ require_once '../../includes/sidebar.php';
     .floating-input:focus {
         border-color: var(--cat-primary);
         background: #fff;
-        box-shadow: 0 0 0 4px rgba(5,150,105,0.15);
+        box-shadow: 0 0 0 4px rgba(45,106,159,0.15);
         outline: none;
     }
     .floating-input::placeholder { color: transparent; }
@@ -506,6 +527,7 @@ require_once '../../includes/sidebar.php';
     </div>
 </div>
 
+<!-- MODAL CREAR CATEGORÍA -->
 <div class="modal fade" id="modalCrearCategoria" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content modal-custom-content">
@@ -523,7 +545,7 @@ require_once '../../includes/sidebar.php';
                 </div>
                 <div class="modal-footer modal-custom-footer">
                     <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" name="crear" class="btn btn-success rounded-pill px-4 fw-bold" style="background: var(--cat-primary); border: none; box-shadow: 0 4px 15px rgba(5,150,105,0.3);">
+                    <button type="submit" name="crear" class="btn btn-primary rounded-pill px-4 fw-bold" style="background: var(--cat-primary); border: none; box-shadow: 0 4px 15px rgba(45,106,159,0.3);">
                         <i class="fas fa-check me-1"></i> Guardar Categoría
                     </button>
                 </div>
@@ -560,6 +582,7 @@ require_once '../../includes/sidebar.php';
             tr.style.display = tr.dataset.nombre.includes(q) ? '' : 'none';
         });
     });
+    
     function editarCategoria(id, nombre) {
         Swal.fire({
             title: 'Editar Categoría',
@@ -572,7 +595,7 @@ require_once '../../includes/sidebar.php';
             showCancelButton: true,
             confirmButtonText: '<i class="fas fa-save"></i> Guardar',
             cancelButtonText: 'Cancelar',
-            confirmButtonColor: '#059669',
+            confirmButtonColor: '#2d6a9f', /* Azul */
             cancelButtonColor: '#94a3b8',
             focusConfirm: false,
             preConfirm: () => {
@@ -591,6 +614,7 @@ require_once '../../includes/sidebar.php';
             }
         });
     }
+    
     function confirmarEliminar(id, nombre) {
         Swal.fire({
             title: '¿Eliminar categoría?',
