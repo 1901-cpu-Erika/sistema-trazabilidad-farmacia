@@ -144,13 +144,13 @@ $alertas = $conn->query("
     <div class="row g-3 mb-4">
         <!-- Tarjeta Azul -->
         <div class="col-xl-3 col-md-6">
-            <div class="card border-0 shadow-sm rounded-4 h-100 stat-card" style="border-left: 4px solid #2d6a9f;">
+            <div class="card border-0 shadow-sm rounded-4 h-100 stat-card">
                 <div class="card-body d-flex align-items-center">
-                    <div class="rounded-circle p-3 me-3" style="background: rgba(45, 106, 159, 0.1);">
-                        <i class="fas fa-boxes fa-2x" style="color: #2d6a9f;"></i>
+                    <div class="rounded-circle bg-primary bg-opacity-10 p-3 me-3">
+                        <i class="fas fa-boxes text-primary fa-2x"></i>
                     </div>
                     <div>
-                        <h5 class="fw-bold mb-0" style="color: #1a3a5c;"><?php echo $total_lotes; ?></h5>
+                        <h5 class="fw-bold mb-0"><?php echo $total_lotes; ?></h5>
                         <small class="text-muted">Total de lotes</small>
                     </div>
                 </div>
@@ -158,13 +158,13 @@ $alertas = $conn->query("
         </div>
         <!-- Tarjeta Verde -->
         <div class="col-xl-3 col-md-6">
-            <div class="card border-0 shadow-sm rounded-4 h-100 stat-card" style="border-left: 4px solid #10b981;">
+            <div class="card border-0 shadow-sm rounded-4 h-100 stat-card">
                 <div class="card-body d-flex align-items-center">
-                    <div class="rounded-circle p-3 me-3" style="background: rgba(16, 185, 129, 0.1);">
-                        <i class="fas fa-capsules fa-2x" style="color: #10b981;"></i>
+                    <div class="rounded-circle bg-success bg-opacity-10 p-3 me-3">
+                        <i class="fas fa-capsules text-success fa-2x"></i>
                     </div>
                     <div>
-                        <h5 class="fw-bold mb-0" style="color: #1a3a5c;"><?php echo number_format($total_unidades); ?></h5>
+                        <h5 class="fw-bold mb-0"><?php echo number_format($total_unidades); ?></h5>
                         <small class="text-muted">Unidades totales</small>
                     </div>
                 </div>
@@ -172,13 +172,13 @@ $alertas = $conn->query("
         </div>
         <!-- Tarjeta Naranja -->
         <div class="col-xl-3 col-md-6">
-            <div class="card border-0 shadow-sm rounded-4 h-100 stat-card" style="border-left: 4px solid #f59e0b;">
+            <div class="card border-0 shadow-sm rounded-4 h-100 stat-card">
                 <div class="card-body d-flex align-items-center">
-                    <div class="rounded-circle p-3 me-3" style="background: rgba(245, 158, 11, 0.1);">
-                        <i class="fas fa-clock fa-2x" style="color: #f59e0b;"></i>
+                    <div class="rounded-circle bg-warning bg-opacity-10 p-3 me-3">
+                        <i class="fas fa-clock text-warning fa-2x"></i>
                     </div>
                     <div>
-                        <h5 class="fw-bold mb-0" style="color: #1a3a5c;"><?php echo $por_vencer; ?></h5>
+                        <h5 class="fw-bold mb-0"><?php echo $por_vencer; ?></h5>
                         <small class="text-muted">Por vencer (30 días)</small>
                     </div>
                 </div>
@@ -186,13 +186,13 @@ $alertas = $conn->query("
         </div>
         <!-- Tarjeta Roja -->
         <div class="col-xl-3 col-md-6">
-            <div class="card border-0 shadow-sm rounded-4 h-100 stat-card" style="border-left: 4px solid #ef4444;">
+            <div class="card border-0 shadow-sm rounded-4 h-100 stat-card">
                 <div class="card-body d-flex align-items-center">
-                    <div class="rounded-circle p-3 me-3" style="background: rgba(239, 68, 68, 0.1);">
-                        <i class="fas fa-exclamation-circle fa-2x" style="color: #ef4444;"></i>
+                    <div class="rounded-circle bg-danger bg-opacity-10 p-3 me-3">
+                        <i class="fas fa-exclamation-circle text-danger fa-2x"></i>
                     </div>
                     <div>
-                        <h5 class="fw-bold mb-0" style="color: #1a3a5c;"><?php echo $stock_critico; ?></h5>
+                        <h5 class="fw-bold mb-0"><?php echo $stock_critico; ?></h5>
                         <small class="text-muted">Stock crítico (&lt; 10)</small>
                     </div>
                 </div>
@@ -204,8 +204,8 @@ $alertas = $conn->query("
         <div class="col-12">
             <div class="card border-0 shadow-lg rounded-4 glass-card">
                 <div class="card-header bg-transparent border-0 pt-4 px-4">
-                    <h6 class="fw-bold mb-0" style="color: #1a3a5c;">
-                        <i class="fas fa-list me-2" style="color: #2d6a9f;"></i>Stock por Medicamento (10 con menos stock)
+                    <h6 class="fw-bold text-primary mb-0">
+                        <i class="fas fa-list me-2"></i>Stock por Medicamento (10 con menos stock)
                     </h6>
                 </div>
                 <div class="card-body p-4 pt-2">
@@ -215,7 +215,6 @@ $alertas = $conn->query("
                                 <tr>
                                     <th>ID</th>
                                     <th>Medicamento</th>
-                                    <th>Código MINSA</th>
                                     <th>Stock Total</th>
                                     <th>Lotes</th>
                                     <th>Estado</th>
@@ -229,7 +228,6 @@ $alertas = $conn->query("
                                         <tr>
                                             <td><span class="badge bg-secondary-subtle text-secondary rounded-pill">#<?php echo $row['id']; ?></span></td>
                                             <td><?php echo htmlspecialchars($row['nombre']); ?></td>
-                                            <td><?php echo $row['codigo_minsa'] ?: '<span class="text-muted">N/A</span>'; ?></td>
                                             <td><strong><?php echo $row['stock_total']; ?></strong></td>
                                             <td><?php echo $row['num_lotes']; ?></td>
                                             <td>
@@ -240,13 +238,13 @@ $alertas = $conn->query("
                                         </tr>
                                     <?php endwhile; ?>
                                 <?php else: ?>
-                                    <tr><td colspan="6" class="text-center py-4 text-muted">No hay medicamentos con stock registrado.</td></tr>
+                                    <tr><td colspan="5" class="text-center py-4 text-muted">No hay medicamentos con stock registrado.</td></tr>
                                 <?php endif; ?>
                             </tbody>
                         </table>
                     </div>
                     <div class="mt-3 text-center">
-                        <a href="lotes.php" class="btn rounded-pill px-4 text-white" style="background: linear-gradient(135deg, #1a3a5c, #2d6a9f); border: none;">
+                        <a href="lotes.php" class="btn btn-primary rounded-pill px-4">
                             <i class="fas fa-arrow-right me-1"></i> Ver gestión de lotes
                         </a>
                     </div>

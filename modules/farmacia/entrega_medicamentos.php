@@ -77,7 +77,8 @@ if (isset($_GET['receta']) && is_numeric($_GET['receta'])) {
         
         $lista_detalles = [];
         while ($det = $result_detalles->fetch_assoc()) {
-            $sql_lote = "SELECT id, codigo_qr, fecha_vencimiento, cantidad 
+            // Se eliminó codigo_qr de la consulta
+            $sql_lote = "SELECT id, fecha_vencimiento, cantidad 
                          FROM lotes 
                          WHERE medicamento_id = ? AND cantidad > 0
                          ORDER BY fecha_vencimiento ASC
@@ -88,7 +89,6 @@ if (isset($_GET['receta']) && is_numeric($_GET['receta'])) {
             $lote = $stmt_lote->get_result()->fetch_assoc();
             
             $det['lote_id'] = $lote['id'] ?? null;
-            $det['codigo_qr'] = $lote['codigo_qr'] ?? null;
             $det['fecha_vencimiento'] = $lote['fecha_vencimiento'] ?? null;
             $det['stock_lote'] = $lote['cantidad'] ?? null;
             
@@ -692,7 +692,6 @@ if (!isset($_GET['receta'])) {
                                     <th>Dosis</th>
                                     <th class="text-center">Cantidad</th>
                                     <th>Lote</th>
-                                    <th>Código QR</th>
                                     <th>Vencimiento</th>
                                 </tr>
                             </thead>
@@ -737,18 +736,6 @@ if (!isset($_GET['receta'])) {
                                             <?php endif; ?>
                                         </td>
                                         <td>
-                                            <?php if (!empty($det['codigo_qr'])): ?>
-                                                <code style="font-size: 0.72rem; color: #2d6a9f; font-weight: 600;">
-                                                    <?php echo htmlspecialchars(substr($det['codigo_qr'], 0, 15)) . '...'; ?>
-                                                </code>
-                                                <button class="btn btn-sm btn-link p-0 ms-1" onclick="copiarQR('<?php echo $det['codigo_qr']; ?>')">
-                                                    <i class="fas fa-copy" style="color: #2d6a9f;"></i>
-                                                </button>
-                                            <?php else: ?>
-                                                <span class="text-muted small">N/A</span>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td>
                                             <?php if (!empty($det['fecha_vencimiento'])): ?>
                                                 <span class="text-muted small">
                                                     <?php echo date('d/m/Y', strtotime($det['fecha_vencimiento'])); ?>
@@ -761,7 +748,7 @@ if (!isset($_GET['receta'])) {
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="6" class="text-center py-4 text-muted">
+                                    <td colspan="5" class="text-center py-4 text-muted">
                                         <i class="fas fa-inbox fa-2x mb-2 d-block opacity-50"></i>
                                         No hay medicamentos asociados a esta receta.
                                     </td>
@@ -995,18 +982,6 @@ if (!isset($_GET['receta'])) {
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-function copiarQR(codigo) {
-    navigator.clipboard.writeText(codigo).then(() => {
-        Swal.fire({
-            title: '¡Copiado!',
-            text: 'Código QR copiado al portapapeles',
-            icon: 'success',
-            timer: 1500,
-            showConfirmButton: false
-        });
-    });
-}
-
 function confirmarEntrega(event) {
     event.preventDefault();
     const form = event.target;
@@ -1026,7 +1001,7 @@ function confirmarEntrega(event) {
         showCancelButton: true,
         confirmButtonText: '<i class="fas fa-check"></i> Sí, confirmar entrega',
         cancelButtonText: 'Cancelar',
-        confirmButtonColor: '#2d6a9f', /* Botón azul */
+        confirmButtonColor: '#2d6a9f', 
         cancelButtonColor: '#94a3b8',
         reverseButtons: true
     }).then((result) => {
