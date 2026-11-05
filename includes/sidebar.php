@@ -11,13 +11,12 @@ $nombre_usuario = $_SESSION['usuario_nombre'] ?? 'Usuario';
 $protocolo = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
 $host = $_SERVER['HTTP_HOST'];
 
-// Si la URL contiene 'vercel.app', estamos en producción. Si no, en local.
 if (strpos($host, 'vercel.app') !== false) {
     $base_url = $protocolo . "://" . $host . "/";
 } else {
     $base_url = $protocolo . "://" . $host . "/sistema-trazabilidad-farmacia/";
 }
-// ==========================================
+
 
 $archivo_actual = basename($_SERVER['PHP_SELF']);
 
