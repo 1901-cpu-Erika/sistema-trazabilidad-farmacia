@@ -171,11 +171,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar_usuario'])) {
     } elseif ($nombre === '' || $email === '') {
         $mensaje = "El nombre y el correo electrónico son obligatorios.";
         $tipo_mensaje = "danger";
+    } elseif (!preg_match('/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/', $nombre)) {
+        // VALIDACIÓN: Solo letras y espacios en el nombre
+        $mensaje = "El nombre solo debe contener letras y espacios.";
+        $tipo_mensaje = "danger";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $mensaje = "Introduce un correo electrónico válido.";
         $tipo_mensaje = "danger";
     } elseif ($tipo === 'doctor' && $codigo_minsa === '') {
         $mensaje = "El Código MINSA es obligatorio para los doctores.";
+        $tipo_mensaje = "danger";
+    } elseif ($tipo === 'doctor' && !ctype_digit($codigo_minsa)) {
+        // VALIDACIÓN: Solo números, cualquier longitud
+        $mensaje = "El Código MINSA solo debe contener números (sin letras ni símbolos).";
         $tipo_mensaje = "danger";
     } elseif (!in_array($estado, ['activo', 'inactivo'], true)) {
         $mensaje = "El estado seleccionado no es válido.";
@@ -184,6 +192,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar_usuario'])) {
         if ($tipo !== 'doctor') {
             $subtipo = 'fijo';
             $especialidad_id = null;
+            $codigo_minsa = null; // Los que no son doctores no tienen código
         }
 
         if (!in_array($subtipo, ['fijo', 'turno'], true)) {
@@ -1017,7 +1026,9 @@ require_once '../../includes/sidebar.php';
                             id="usuario_nombre"
                             required
                             value="<?php echo htmlspecialchars($usuario_editar['nombre'] ?? ''); ?>"
-                            placeholder="Ej: Dr. Juan Pérez">
+                            placeholder="Ej: Dr. Juan Pérez"
+                            pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+"
+                            title="Solo se permiten letras y espacios">
                     </div>
 
                     <div class="mb-3">
@@ -1036,6 +1047,7 @@ require_once '../../includes/sidebar.php';
                     <div class="mb-3">
                         <label class="form-label us-modal-label">Código MINSA</label>
 
+                        <!-- VALIDACIÓN: Solo números (sin límite de longitud) y teclado numérico en móvil -->
                         <input
                             type="text"
                             class="form-control rounded-pill"
@@ -1043,10 +1055,12 @@ require_once '../../includes/sidebar.php';
                             id="usuario_codigo_minsa"
                             value="<?php echo htmlspecialchars($usuario_editar['codigo_minsa'] ?? ''); ?>"
                             placeholder="Ej: 12345"
-                            maxlength="50">
+                            inputmode="numeric"
+                            oninput="this.value = this.value.replace(/[^0-9]/g, '');"
+                            title="Solo se permiten números">
 
                         <small class="text-muted">
-                            Obligatorio para doctores.
+                            Obligatorio para doctores. Solo números.
                         </small>
                     </div>
 
