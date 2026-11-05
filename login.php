@@ -217,8 +217,8 @@ if ($res_doc) {
             <div class="col-md-6">
                 <div class="left-panel h-100">
                     <i class="fas fa-hospital-user"></i>
-                    <h3 class="fw-bold">Sistema de Salud</h3>
-                    <p class="mb-4">Trazabilidad y Gestión de Fármacos, Recetas Digitales y Atención al Paciente.</p>
+                    <h3 class="fw-bold">FarmaTrace</h3>
+                    <p class="mb-4">Trazabilidad y Gestión de Fármacos, Recetas Digitales y Atención al Paciente</p>
                     <div class="d-flex gap-3 fs-4">
                         <i class="fas fa-prescription-bottle-medical"></i>
                         <i class="fas fa-user-md"></i>
