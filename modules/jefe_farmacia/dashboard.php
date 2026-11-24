@@ -1,5 +1,4 @@
 <?php
-// Configuración estricta de sesión para Vercel
 if (session_status() === PHP_SESSION_NONE) {
     session_save_path('/tmp');
     session_set_cookie_params([
@@ -19,27 +18,22 @@ require_once '../../includes/sidebar.php';
 
 $stats = [];
 
-// 1. Recetas Pendientes
 $sql = "SELECT COUNT(*) as total FROM recetas WHERE estado = 'pendiente'";
 $result = $conn->query($sql);
 $stats['recetas_pendientes'] = $result->fetch_assoc()['total'];
 
-// 2. Stock Bajo (Contando cuántos lotes tienen menos de 10)
 $sql = "SELECT COUNT(*) as total FROM lotes WHERE cantidad < 10";
 $result = $conn->query($sql);
 $stats['stock_bajo'] = $result->fetch_assoc()['total'] ?? 0;
 
-// 3. Por Vencer (30 días)
 $sql = "SELECT COUNT(*) as total FROM lotes WHERE fecha_vencimiento BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY)";
 $result = $conn->query($sql);
 $stats['por_vencer'] = $result->fetch_assoc()['total'];
 
-// 4. Pacientes Activos
 $sql = "SELECT COUNT(*) as total FROM pacientes";
 $result = $conn->query($sql);
 $stats['total_pacientes'] = $result->fetch_assoc()['total'];
 
-// PAGINACIÓN DE RECETAS RECIENTES (6 por página)
 $por_pagina = 6;
 $pagina = isset($_GET['pagina']) ? intval($_GET['pagina']) : 1;
 if ($pagina < 1) $pagina = 1;
@@ -58,13 +52,11 @@ $sql = "SELECT r.*, p.nombre as paciente_nombre, p.apellido as paciente_apellido
         LIMIT $por_pagina OFFSET $offset";
 $recetas_recientes = $conn->query($sql);
 
-// CONSULTAS PARA LAS VENTANAS MODALES
 $lista_stock_bajo = $conn->query("SELECT m.nombre, l.cantidad, l.fecha_vencimiento FROM lotes l JOIN medicamentos m ON l.medicamento_id = m.id WHERE l.cantidad < 10 ORDER BY l.cantidad ASC");
 $lista_por_vencer = $conn->query("SELECT m.nombre, l.cantidad, l.fecha_vencimiento FROM lotes l JOIN medicamentos m ON l.medicamento_id = m.id WHERE l.fecha_vencimiento BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY) ORDER BY l.fecha_vencimiento ASC");
 ?>
 
 <style>
-    /* ELIMINAR ESPACIO EN BLANCO SUPERIOR */
     .main-content { padding-top: 0 !important; }
     .dashboard-container { padding: 20px; margin-top: -15px; }
     
@@ -83,11 +75,10 @@ $lista_por_vencer = $conn->query("SELECT m.nombre, l.cantidad, l.fecha_vencimien
         box-shadow: 0 10px 25px rgba(0,0,0,0.15);
     }
     
-    /* PALETA AZUL LOGIN */
     .card-blue { background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 100%); cursor: default; }
-    .card-orange { background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%); } /* Alerta stock */
-    .card-red { background: linear-gradient(135deg, #cb2d3e 0%, #ef473a 100%); }    /* Alerta vencimiento */
-    .card-green { background: linear-gradient(135deg, #2d6a9f 0%, #4fa3d1 100%); cursor: default; } /* Azul claro */
+    .card-orange { background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%); }
+    .card-red { background: linear-gradient(135deg, #cb2d3e 0%, #ef473a 100%); }
+    .card-green { background: linear-gradient(135deg, #2d6a9f 0%, #4fa3d1 100%); cursor: default; }
     
     .stat-icon {
         position: absolute;
@@ -102,7 +93,6 @@ $lista_por_vencer = $conn->query("SELECT m.nombre, l.cantidad, l.fecha_vencimien
         z-index: 1;
     }
 
-    /* Animación de Alerta Parpadeante */
     .alerta-parpadeo {
         animation: parpadeo 1.5s infinite;
         background: rgba(255, 255, 255, 0.3);
@@ -148,15 +138,15 @@ $lista_por_vencer = $conn->query("SELECT m.nombre, l.cantidad, l.fecha_vencimien
     }
 
     .table tbody tr:hover {
-        background: rgba(45, 106, 159, 0.04); /* Hover azul */
+        background: rgba(45, 106, 159, 0.04);
     }
     .btn-gradient-blue { background: linear-gradient(135deg, #1a3a5c, #2d6a9f); color: #fff; border: none; }
     .btn-gradient-blue:hover { color: #fff; opacity: 0.9; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(45,106,159,0.4); }
 
     .badge-soft-warning { background: #fff3cd; color: #856404; padding: 8px 12px; border-radius: 8px; font-weight: 600; }
     .badge-soft-success { background: #d4edda; color: #155724; padding: 8px 12px; border-radius: 8px; font-weight: 600; }
+    .badge-soft-secondary { background: #e2e3e5; color: #383d41; padding: 8px 12px; border-radius: 8px; font-weight: 600; }
     
-    /* PAGINACIÓN AZUL */
     .pagination { gap: 6px; }
     .page-item .page-link {
         border-radius: 50%;
@@ -183,7 +173,6 @@ $lista_por_vencer = $conn->query("SELECT m.nombre, l.cantidad, l.fecha_vencimien
 </style>
 
 <div class="container-fluid px-4 mt-4">
-    <!-- BANNER AZUL -->
     <div class="card border-0 shadow-lg rounded-4 overflow-hidden position-relative" 
          style="background: linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 100%);">
         <i class="fas fa-pills position-absolute" style="font-size: 150px; right: 20px; top: -30px; opacity: 0.1; color: white;"></i>
@@ -210,7 +199,6 @@ $lista_por_vencer = $conn->query("SELECT m.nombre, l.cantidad, l.fecha_vencimien
 
 <div class="container-fluid dashboard-container fade-in">
     <div class="row g-4 mb-4">
-        <!-- Recetas Pendientes (Azul) -->
         <div class="col-xl-3 col-md-6">
             <div class="card stat-card card-blue h-100">
                 <div class="card-body">
@@ -230,7 +218,6 @@ $lista_por_vencer = $conn->query("SELECT m.nombre, l.cantidad, l.fecha_vencimien
             </div>
         </div>
 
-        <!-- Stock Bajo (Alerta Naranja) -->
         <div class="col-xl-3 col-md-6">
             <div class="card stat-card card-orange h-100" data-bs-toggle="modal" data-bs-target="#modalStockBajo">
                 <div class="card-body">
@@ -253,7 +240,6 @@ $lista_por_vencer = $conn->query("SELECT m.nombre, l.cantidad, l.fecha_vencimien
             </div>
         </div>
 
-        <!-- Por Vencer (Alerta Roja) -->
         <div class="col-xl-3 col-md-6">
             <div class="card stat-card card-red h-100" data-bs-toggle="modal" data-bs-target="#modalPorVencer">
                 <div class="card-body">
@@ -276,7 +262,6 @@ $lista_por_vencer = $conn->query("SELECT m.nombre, l.cantidad, l.fecha_vencimien
             </div>
         </div>
 
-        <!-- Pacientes Activos (Azul Claro) -->
         <div class="col-xl-3 col-md-6">
             <div class="card stat-card card-green h-100">
                 <div class="card-body">
@@ -297,7 +282,6 @@ $lista_por_vencer = $conn->query("SELECT m.nombre, l.cantidad, l.fecha_vencimien
         </div>
     </div>
 
-    <!-- LISTADO DE RECETAS A TODO EL ANCHO -->
     <div class="row mb-4">
         <div class="col-12">
             <div class="card custom-card h-100">
@@ -345,7 +329,7 @@ $lista_por_vencer = $conn->query("SELECT m.nombre, l.cantidad, l.fecha_vencimien
                                             </span>
                                         </td>
                                         <td class="text-center">
-                                            <button class="btn btn-sm btn-outline-primary rounded-circle" onclick="verReceta(<?php echo $receta['id']; ?>)">
+                                            <button class="btn btn-sm btn-outline-primary rounded-circle" onclick="verReceta(<?php echo $receta['id']; ?>, '<?php echo addslashes($receta['paciente_nombre'] . ' ' . $receta['paciente_apellido']); ?>', '<?php echo addslashes($receta['doctor_nombre']); ?>', '<?php echo date('d/m/Y', strtotime($receta['fecha_receta'])); ?>')">
                                                 <i class="fas fa-eye"></i>
                                             </button>
                                         </td>
@@ -361,7 +345,6 @@ $lista_por_vencer = $conn->query("SELECT m.nombre, l.cantidad, l.fecha_vencimien
                     </div>
                 </div>
                 
-                <!-- Paginación -->
                 <?php if($total_paginas > 1): ?>
                 <div class="card-footer bg-white border-0 py-3">
                     <nav>
@@ -386,9 +369,6 @@ $lista_por_vencer = $conn->query("SELECT m.nombre, l.cantidad, l.fecha_vencimien
     </div>
 </div>
 
-<!-- ========================================== -->
-<!-- VENTANA MODAL: STOCK BAJO                  -->
-<!-- ========================================== -->
 <div class="modal fade" id="modalStockBajo" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
@@ -428,9 +408,6 @@ $lista_por_vencer = $conn->query("SELECT m.nombre, l.cantidad, l.fecha_vencimien
     </div>
 </div>
 
-<!-- ========================================== -->
-<!-- VENTANA MODAL: POR VENCER                  -->
-<!-- ========================================== -->
 <div class="modal fade" id="modalPorVencer" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
@@ -472,7 +449,7 @@ $lista_por_vencer = $conn->query("SELECT m.nombre, l.cantidad, l.fecha_vencimien
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-function verReceta(id) {
+function verReceta(id, paciente, doctor, fecha) {
     Swal.fire({
         title: 'Detalles de la Receta',
         html: 'Cargando...',
@@ -483,17 +460,17 @@ function verReceta(id) {
                     title: 'Receta #' + id,
                     html: `
                         <div class="text-left">
-                            <p><strong>Paciente:</strong> Juan Pérez</p>
-                            <p><strong>Doctor:</strong> Dr. Juan Pérez</p>
+                            <p><strong>Paciente:</strong> ${paciente}</p>
+                            <p><strong>Doctor:</strong> Dr. ${doctor}</p>
                             <p><strong>Medicamentos:</strong></p>
                             <ul>
                                 <li>Paracetamol 500mg - 10 tabletas</li>
                             </ul>
-                            <p><strong>Fecha:</strong> <?php echo date('d/m/Y'); ?></p>
+                            <p><strong>Fecha:</strong> ${fecha}</p>
                         </div>
                     `,
                     confirmButtonText: 'Aceptar',
-                    confirmButtonColor: '#2d6a9f' /* Botón azul */
+                    confirmButtonColor: '#2d6a9f'
                 });
             }, 1500);
         }

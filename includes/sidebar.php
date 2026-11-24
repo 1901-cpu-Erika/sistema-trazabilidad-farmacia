@@ -288,6 +288,9 @@ $nombre_rol = match($tipo_usuario) {
                     <i class="fas fa-tags"></i> Categorías
                 </a>
             </li>
+            <a href="laboratorios.php" class="nav-link">
+        <i class="fas fa-industry"></i>Laboratorios
+        </a>
             <li class="sidebar-section-title">Solicitudes</li>
             <li class="nav-item">
                 <a class="nav-link <?php echo $archivo_actual == 'solicitud_reposicion.php' ? 'active' : ''; ?>"
